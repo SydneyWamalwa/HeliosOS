@@ -39,8 +39,23 @@ class HeliosOS {
         const registerBtn = document.getElementById('register-btn');
         const logoutBtn = document.getElementById('logout-btn');
 
-        if (sendBtn && chatInput) {
+        // Use the elements that exist in the current template
+        // For chat functionality
+        if (!sendBtn && document.getElementById('send')) {
+            document.getElementById('send').addEventListener('click', () => this.sendChatMessage());
+        } else if (sendBtn) {
             sendBtn.addEventListener('click', () => this.sendChatMessage());
+        }
+        
+        if (!chatInput && document.getElementById('input')) {
+            const input = document.getElementById('input');
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendChatMessage();
+                }
+            });
+        } else if (chatInput) {
             chatInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -148,7 +163,9 @@ class HeliosOS {
     }
 
     async sendChatMessage() {
-        const input = document.getElementById('chat-input');
+        const input = document.getElementById('chat-input') || document.getElementById('input');
+        if (!input) return;
+        
         const message = input.value.trim();
 
         if (!message) return;
@@ -187,7 +204,9 @@ class HeliosOS {
     }
 
     async summarizeText() {
-        const input = document.getElementById('chat-input');
+        const input = document.getElementById('chat-input') || document.getElementById('input');
+        if (!input) return;
+        
         const text = input.value.trim();
 
         if (!text) {
@@ -196,7 +215,9 @@ class HeliosOS {
         }
 
         // Show loading state
-        const summarizeBtn = document.getElementById('summarize-btn');
+        const summarizeBtn = document.getElementById('summarize-btn') || document.getElementById('summarize');
+        if (!summarizeBtn) return;
+        
         const originalText = summarizeBtn.textContent;
         summarizeBtn.textContent = 'Summarizing...';
         summarizeBtn.disabled = true;
@@ -220,47 +241,44 @@ class HeliosOS {
     }
 
     async executeCommand() {
-        const input = document.getElementById('cmd-input');
+        const input = document.getElementById('cmd-input') || document.getElementById('command');
+        if (!input) return;
+        
         const command = input.value.trim();
 
-        if (!command) return;
-
-        // Add to command history
-        this.commandHistory.unshift(command);
-        if (this.commandHistory.length > 20) {
-            this.commandHistory.pop();
+        if (!command) {
+            this.showNotification('Please enter a command', 'warning');
+            return;
         }
-        this.currentHistoryIndex = -1;
 
-        // Show command in output
-        this.addCommandOutput(`$ ${command}`, 'command');
-
-        // Clear input
-        input.value = '';
+        // Show loading state
+        const runBtn = document.getElementById('run-btn') || document.getElementById('run');
+        if (!runBtn) return;
+        
+        const originalText = runBtn.textContent;
+        runBtn.textContent = 'Running...';
+        runBtn.disabled = true;
 
         try {
-            const response = await this.apiCall('/exec/run', 'POST', {command});
+            const response = await this.apiCall('/exec', 'POST', {command});
 
-            // Show execution time
-            this.addCommandOutput(`[Executed in ${response.execution_time}s]`, 'meta');
+            // Add command and output to history
+            this.addCommandToHistory(command, response.output, response.exit_code);
 
-            // Show stdout
-            if (response.stdout) {
-                this.addCommandOutput(response.stdout, 'stdout');
-            }
+            // Clear input
+            input.value = '';
 
-            // Show stderr
-            if (response.stderr) {
-                this.addCommandOutput(response.stderr, 'stderr');
-            }
-
-            // Show return code if non-zero
-            if (response.return_code !== 0) {
-                this.addCommandOutput(`Exit code: ${response.return_code}`, 'error');
+            // Add to command history
+            this.commandHistory.push(command);
+            if (this.commandHistory.length > this.maxHistorySize) {
+                this.commandHistory = this.commandHistory.slice(-this.maxHistorySize);
             }
 
         } catch (error) {
-            this.addCommandOutput(`Error: ${error.message}`, 'error');
+            this.addCommandToHistory(command, `Error: ${error.message}`, 1);
+        } finally {
+            runBtn.textContent = originalText;
+            runBtn.disabled = false;
         }
     }
 
@@ -452,13 +470,29 @@ class HeliosOS {
     }
 
     showAuthRequired() {
-        document.getElementById('auth-container').style.display = 'flex';
-        document.getElementById('main-container').style.display = 'none';
+        const authContainer = document.getElementById('auth-container');
+        const mainContainer = document.getElementById('main-container');
+        
+        if (authContainer) {
+            authContainer.style.display = 'flex';
+        }
+        
+        if (mainContainer) {
+            mainContainer.style.display = 'none';
+        }
     }
 
     showMainInterface() {
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('main-container').style.display = 'grid';
+        const authContainer = document.getElementById('auth-container');
+        const mainContainer = document.getElementById('main-container');
+        
+        if (authContainer) {
+            authContainer.style.display = 'none';
+        }
+        
+        if (mainContainer) {
+            mainContainer.style.display = 'grid';
+        }
 
         // Update user info
         const userInfo = document.getElementById('user-info');
