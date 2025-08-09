@@ -3,9 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Aurora OS — Leo (AI Cloud Desktop POC)</title>
+  <title>Helios OS — AI Cloud Desktop</title>
   <style>
-    :root{--bg:#071428;--card:#0b1220;--muted:#94a3b8;--accent:#7c3aed}
+    :root{
+      --bg:#071428;
+      --card:#0b1220;
+      --muted:#94a3b8;
+      --accent:#7c3aed;
+      --accent-light:#9061f9;
+      --success:#10b981;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --info:#3b82f6;
+    }
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#061021,#07162a);color:#e6eef8}
     .app{display:grid;grid-template-columns:1fr 420px;height:100vh;gap:12px;padding:12px;box-sizing:border-box}
     .viewer{background:var(--card);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 6px 30px rgba(2,6,23,0.6)}
@@ -25,11 +35,53 @@
     .controls{display:flex;gap:8px;align-items:center}
     textarea.input{width:100%;min-height:64px;max-height:160px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;resize:vertical}
     button.primary{background:var(--accent);border:none;color:white;padding:8px 12px;border-radius:8px;cursor:pointer}
+    button.primary:hover{background:var(--accent-light)}
     button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:8px 10px;border-radius:8px;cursor:pointer}
+    button.ghost:hover{background:rgba(255,255,255,0.03);color:#fff}
     .small{font-size:12px;color:var(--muted)}
-    .panel{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)}
+    .panel{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);margin-bottom:10px}
     .cmd-out{white-space:pre-wrap;background:#031021;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);max-height:160px;overflow:auto}
     .footer{border-top:1px solid rgba(255,255,255,0.02);padding-top:8px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+    
+    /* Tabs */
+    .tabs{display:flex;border-bottom:1px solid rgba(255,255,255,0.05);margin-bottom:10px}
+    .tab{padding:8px 12px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent}
+    .tab.active{color:#fff;border-bottom:2px solid var(--accent)}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    
+    /* File Explorer */
+    .file-explorer{height:300px;overflow:auto;background:#031021;border-radius:6px;border:1px solid rgba(255,255,255,0.02)}
+    .file-path{padding:8px;background:rgba(255,255,255,0.02);border-bottom:1px solid rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:space-between}
+    .file-list{list-style:none;padding:0;margin:0}
+    .file-item{padding:6px 8px;display:flex;align-items:center;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.01)}
+    .file-item:hover{background:rgba(255,255,255,0.02)}
+    .file-icon{margin-right:8px;width:16px;text-align:center}
+    .file-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .file-size{font-size:11px;color:var(--muted);margin-left:8px}
+    
+    /* App Launcher */
+    .app-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(100px, 1fr));gap:10px}
+    .app-item{display:flex;flex-direction:column;align-items:center;padding:10px;border-radius:8px;cursor:pointer;text-align:center}
+    .app-item:hover{background:rgba(255,255,255,0.02)}
+    .app-icon{width:48px;height:48px;border-radius:8px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;margin-bottom:8px;font-size:24px}
+    .app-name{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+    
+    /* System Monitor */
+    .system-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .stat-card{background:rgba(255,255,255,0.02);border-radius:8px;padding:10px;display:flex;flex-direction:column}
+    .stat-title{font-size:12px;color:var(--muted);margin-bottom:4px}
+    .stat-value{font-size:18px;font-weight:600}
+    .stat-meta{font-size:11px;color:var(--muted);margin-top:4px}
+    
+    /* Modal */
+    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center}
+    .modal-content{background:var(--card);border-radius:12px;width:90%;max-width:600px;max-height:80vh;overflow:auto;box-shadow:0 10px 25px rgba(0,0,0,0.5)}
+    .modal-header{padding:15px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center}
+    .modal-body{padding:15px}
+    .modal-footer{padding:15px;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:flex-end;gap:10px}
+    .close-modal{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+    
     @media (max-width:900px){.app{grid-template-columns:1fr;grid-auto-rows:1fr 420px}}
   </style>
 </head>
