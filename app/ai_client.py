@@ -237,7 +237,9 @@ class HuggingFaceClient:
             # Test database connection first
             try:
                 from app.models import db
-                db.engine.execute("SELECT 1")
+                # Use text() for SQLAlchemy 2.0 compatibility
+                from sqlalchemy import text
+                db.session.execute(text("SELECT 1"))
             except Exception as db_error:
                 logger.warning(f"Database not available, skipping logging: {str(db_error)}")
                 return

@@ -144,3 +144,104 @@ connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  passw
 connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
 
 (Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 01:04:47,532 ERROR: Failed to create database tables: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/__init__.py:93]
+2025-08-10 01:05:01,424 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 01:05:02,234 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:05:04,803 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:05:07,055 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:05:07,055 ERROR: Summarization failed: RetryError[<Future at 0x7fa603b89430 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:05:07,056 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:06:01,395 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 01:06:01,728 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:06:03,965 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:06:06,210 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:06:06,211 ERROR: Summarization failed: RetryError[<Future at 0x7fa602b070e0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:06:06,211 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:07:01,305 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 01:07:01,902 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:07:08,091 ERROR: Failed to create database tables: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/__init__.py:93]
+2025-08-10 01:11:39,232 ERROR: Failed to create database tables: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/__init__.py:99]
+2025-08-10 01:16:15,411 INFO: Database tables created successfully [in /home/sydney/HeliosOS/app/__init__.py:97]
+2025-08-10 01:16:21,991 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:16:24,270 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:16:26,523 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:16:26,524 ERROR: Summarization failed: RetryError[<Future at 0x7f465d111970 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:16:26,525 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:16:51,530 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:16:53,775 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:16:56,012 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:16:56,013 ERROR: Summarization failed: RetryError[<Future at 0x7f465b1954f0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:16:56,013 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:17:01,545 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:17:03,786 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:17:06,021 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:17:06,022 ERROR: Summarization failed: RetryError[<Future at 0x7f465b1969c0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:17:06,023 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:17:21,903 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:17:24,168 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:17:26,485 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:17:26,486 ERROR: Summarization failed: RetryError[<Future at 0x7f465b1968d0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:17:26,486 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:17:51,601 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:17:54,272 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:17:56,515 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:17:56,515 ERROR: Summarization failed: RetryError[<Future at 0x7f465b194530 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:17:56,516 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:18:01,681 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:18:03,917 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:18:06,154 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:18:06,155 ERROR: Summarization failed: RetryError[<Future at 0x7f465b947d10 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:18:06,156 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:18:21,803 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:18:24,055 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:18:26,296 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:18:26,297 ERROR: Summarization failed: RetryError[<Future at 0x7f465b195fd0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:18:26,298 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:18:51,791 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:18:54,025 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:18:56,273 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:18:56,274 ERROR: Summarization failed: RetryError[<Future at 0x7f465b195af0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:18:56,274 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:19:02,046 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:19:04,416 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:19:06,777 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:19:06,777 ERROR: Summarization failed: RetryError[<Future at 0x7f465b196030 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:19:06,777 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:19:21,677 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:19:23,915 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:19:26,165 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:19:26,165 ERROR: Summarization failed: RetryError[<Future at 0x7f465b197020 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:19:26,166 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:20:03,761 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:20:03,768 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:20:06,006 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:20:06,018 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:20:08,269 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:20:08,270 ERROR: Summarization failed: RetryError[<Future at 0x7f465b197d40 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:20:08,270 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:20:08,277 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:20:08,278 ERROR: Summarization failed: RetryError[<Future at 0x7f465b194140 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:20:08,278 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 01:21:03,565 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:21:06,076 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:21:08,376 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 01:21:08,377 ERROR: Summarization failed: RetryError[<Future at 0x7f465b1bc740 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 01:21:08,379 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]

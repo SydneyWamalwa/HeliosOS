@@ -7,13 +7,17 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_cors import CORS
 from flask_login import LoginManager
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Initialize extensions - SINGLE INSTANCES ONLY
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 
-# Flask-Limiter with proper initialization
+# Flask-Limiter (can set Redis/Memcached storage for production)
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["100 per hour", "20 per minute"]
@@ -24,9 +28,11 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'development')
 
-    app = Flask(__name__,
-                static_folder="static",
-                template_folder="templates")
+    app = Flask(
+        __name__,
+        static_folder="static",
+        template_folder="templates"
+    )
 
     # Basic configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')

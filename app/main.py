@@ -31,6 +31,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 app.config['HUGGINGFACE_API_KEY'] = os.getenv('HUGGINGFACE_API_KEY')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+
 
 app = FastAPI(title="Helios OS - AI Cloud Desktop")
 
