@@ -5,6 +5,7 @@ class HeliosOS {
         this.user = null;
         this.chatHistory = [];
         this.commandHistory = [];
+        this.currentHistoryIndex = -1;
         this.maxHistorySize = 50;
 
         this.init();
@@ -19,7 +20,7 @@ class HeliosOS {
         // Auto-refresh status every 30 seconds
         setInterval(() => this.updateStatus(), 30000);
 
-        // Auto-save preferences
+        // Auto-save preferences every minute
         setInterval(() => this.saveUserPreferences(), 60000);
     }
 
@@ -46,7 +47,7 @@ class HeliosOS {
         } else if (sendBtn) {
             sendBtn.addEventListener('click', () => this.sendChatMessage());
         }
-        
+
         if (!chatInput && document.getElementById('input')) {
             const input = document.getElementById('input');
             input.addEventListener('keydown', (e) => {
@@ -165,7 +166,7 @@ class HeliosOS {
     async sendChatMessage() {
         const input = document.getElementById('chat-input') || document.getElementById('input');
         if (!input) return;
-        
+
         const message = input.value.trim();
 
         if (!message) return;
@@ -206,7 +207,7 @@ class HeliosOS {
     async summarizeText() {
         const input = document.getElementById('chat-input') || document.getElementById('input');
         if (!input) return;
-        
+
         const text = input.value.trim();
 
         if (!text) {
@@ -217,7 +218,7 @@ class HeliosOS {
         // Show loading state
         const summarizeBtn = document.getElementById('summarize-btn') || document.getElementById('summarize');
         if (!summarizeBtn) return;
-        
+
         const originalText = summarizeBtn.textContent;
         summarizeBtn.textContent = 'Summarizing...';
         summarizeBtn.disabled = true;
@@ -243,7 +244,7 @@ class HeliosOS {
     async executeCommand() {
         const input = document.getElementById('cmd-input') || document.getElementById('command');
         if (!input) return;
-        
+
         const command = input.value.trim();
 
         if (!command) {
@@ -254,7 +255,7 @@ class HeliosOS {
         // Show loading state
         const runBtn = document.getElementById('run-btn') || document.getElementById('run');
         if (!runBtn) return;
-        
+
         const originalText = runBtn.textContent;
         runBtn.textContent = 'Running...';
         runBtn.disabled = true;
@@ -262,8 +263,8 @@ class HeliosOS {
         try {
             const response = await this.apiCall('/exec', 'POST', {command});
 
-            // Add command and output to history
-            this.addCommandToHistory(command, response.output, response.exit_code);
+            // Add command and output to display
+            this.addCommandToOutput(command, response.output, response.exit_code);
 
             // Clear input
             input.value = '';
@@ -274,8 +275,11 @@ class HeliosOS {
                 this.commandHistory = this.commandHistory.slice(-this.maxHistorySize);
             }
 
+            // Reset history index
+            this.currentHistoryIndex = -1;
+
         } catch (error) {
-            this.addCommandToHistory(command, `Error: ${error.message}`, 1);
+            this.addCommandToOutput(command, `Error: ${error.message}`, 1);
         } finally {
             runBtn.textContent = originalText;
             runBtn.disabled = false;
@@ -286,6 +290,7 @@ class HeliosOS {
         if (this.commandHistory.length === 0) return;
 
         const input = document.getElementById('cmd-input');
+        if (!input) return;
 
         if (direction === -1) { // Up arrow
             this.currentHistoryIndex = Math.min(
@@ -297,7 +302,8 @@ class HeliosOS {
         }
 
         if (this.currentHistoryIndex >= 0) {
-            input.value = this.commandHistory[this.currentHistoryIndex];
+            const historyIndex = this.commandHistory.length - 1 - this.currentHistoryIndex;
+            input.value = this.commandHistory[historyIndex];
         } else {
             input.value = '';
         }
@@ -305,6 +311,8 @@ class HeliosOS {
 
     addChatMessage(role, content, isTemporary = false, type = 'normal') {
         const chat = document.getElementById('chat-container');
+        if (!chat) return null;
+
         const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
         const messageDiv = document.createElement('div');
@@ -330,39 +338,69 @@ class HeliosOS {
     }
 
     removeChatMessage(messageId) {
+        if (!messageId) return;
         const element = document.getElementById(messageId);
         if (element) {
             element.remove();
         }
     }
 
-    addCommandOutput(content, type = 'stdout') {
-        const output = document.getElementById('cmd-output');
-        const line = document.createElement('div');
-        line.className = `output-line ${type}`;
-        line.textContent = content;
+    addCommandToOutput(command, output, exitCode) {
+        const container = document.getElementById('cmd-output');
+        if (!container) {
+            // If no dedicated output container, add to chat
+            this.addChatMessage('assistant', `Command: \`${command}\`\n\nOutput:\n\`\`\`\n${output}\n\`\`\`\n\nExit code: ${exitCode}`, false, exitCode === 0 ? 'normal' : 'error');
+            return;
+        }
 
-        output.appendChild(line);
-        output.scrollTop = output.scrollHeight;
+        const outputDiv = document.createElement('div');
+        outputDiv.className = `command-output ${exitCode === 0 ? 'success' : 'error'}`;
+
+        const timestamp = new Date().toLocaleTimeString();
+
+        outputDiv.innerHTML = `
+            <div class="command-header">
+                <span class="command-text">$ ${command}</span>
+                <span class="timestamp">${timestamp}</span>
+            </div>
+            <pre class="command-result">${this.escapeHtml(output)}</pre>
+            <div class="command-footer">
+                <span class="exit-code">Exit code: ${exitCode}</span>
+            </div>
+        `;
+
+        container.appendChild(outputDiv);
+        container.scrollTop = container.scrollHeight;
 
         // Limit output history
-        while (output.children.length > 100) {
-            output.removeChild(output.firstChild);
+        while (container.children.length > 100) {
+            container.removeChild(container.firstChild);
         }
     }
 
     formatMessage(content) {
-        // Simple markdown-like formatting
-        return content
+        // Simple markdown-like formatting with HTML escaping
+        return this.escapeHtml(content)
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/`(.*?)`/g, '<code>$1</code>')
             .replace(/\n/g, '<br>');
     }
 
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     async updateStatus() {
         try {
             const response = await fetch('/health');
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
             const status = await response.json();
 
             const statusElement = document.getElementById('system-status');
@@ -371,9 +409,16 @@ class HeliosOS {
                 statusElement.className = `status ${status.status}`;
             }
 
-            // Update component statuses
-            this.updateComponentStatus('db-status', status.components.database);
-            this.updateComponentStatus('ai-status', status.components.ai_service.status);
+            // Update component statuses with null checks
+            if (status.components) {
+                if (status.components.database) {
+                    this.updateComponentStatus('db-status', status.components.database);
+                }
+
+                if (status.components.ai_service && status.components.ai_service.status) {
+                    this.updateComponentStatus('ai-status', status.components.ai_service.status);
+                }
+            }
 
         } catch (error) {
             console.error('Status update failed:', error);
@@ -382,6 +427,10 @@ class HeliosOS {
                 statusElement.textContent = 'error';
                 statusElement.className = 'status error';
             }
+
+            // Set component statuses to error
+            this.updateComponentStatus('db-status', 'error');
+            this.updateComponentStatus('ai-status', 'error');
         }
     }
 
@@ -397,13 +446,28 @@ class HeliosOS {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.innerHTML = `
-            <span>${message}</span>
+            <span>${this.escapeHtml(message)}</span>
             <button onclick="this.parentElement.remove()">&times;</button>
         `;
 
-        const container = document.getElementById('notifications') || document.body;
+        // Find or create notifications container
+        let container = document.getElementById('notifications');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'notifications';
+            container.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10000;
+                max-width: 300px;
+            `;
+            document.body.appendChild(container);
+        }
+
         container.appendChild(notification);
 
+        // Auto-remove notification
         setTimeout(() => {
             if (notification.parentElement) {
                 notification.remove();
@@ -472,11 +536,11 @@ class HeliosOS {
     showAuthRequired() {
         const authContainer = document.getElementById('auth-container');
         const mainContainer = document.getElementById('main-container');
-        
+
         if (authContainer) {
             authContainer.style.display = 'flex';
         }
-        
+
         if (mainContainer) {
             mainContainer.style.display = 'none';
         }
@@ -485,11 +549,11 @@ class HeliosOS {
     showMainInterface() {
         const authContainer = document.getElementById('auth-container');
         const mainContainer = document.getElementById('main-container');
-        
+
         if (authContainer) {
             authContainer.style.display = 'none';
         }
-        
+
         if (mainContainer) {
             mainContainer.style.display = 'grid';
         }
@@ -522,7 +586,11 @@ class HeliosOS {
             timestamp: Date.now()
         };
 
-        localStorage.setItem('helios_preferences', JSON.stringify(preferences));
+        try {
+            localStorage.setItem('helios_preferences', JSON.stringify(preferences));
+        } catch (error) {
+            console.error('Failed to save preferences:', error);
+        }
     }
 
     applyPreferences(preferences) {
@@ -530,7 +598,7 @@ class HeliosOS {
             document.body.className = preferences.theme;
         }
 
-        if (preferences.chatHistory) {
+        if (preferences.chatHistory && Array.isArray(preferences.chatHistory)) {
             this.chatHistory = preferences.chatHistory;
             this.renderChatHistory();
         }
@@ -554,8 +622,8 @@ class HeliosOS {
                 this.apiCall('/audit/ai?per_page=20')
             ]);
 
-            this.renderCommandAudit(commandAudit.audits);
-            this.renderAIAudit(aiAudit.interactions);
+            this.renderCommandAudit(commandAudit.audits || []);
+            this.renderAIAudit(aiAudit.interactions || []);
 
         } catch (error) {
             console.error('Failed to load audit data:', error);
@@ -569,7 +637,7 @@ class HeliosOS {
         container.innerHTML = audits.map(audit => `
             <div class="audit-item ${audit.return_code === 0 ? 'success' : 'error'}">
                 <div class="audit-header">
-                    <code>${audit.command}</code>
+                    <code>${this.escapeHtml(audit.command)}</code>
                     <span class="timestamp">${new Date(audit.created_at).toLocaleString()}</span>
                 </div>
                 <div class="audit-details">
@@ -587,12 +655,12 @@ class HeliosOS {
         container.innerHTML = interactions.map(interaction => `
             <div class="audit-item ${interaction.success ? 'success' : 'error'}">
                 <div class="audit-header">
-                    <span>${interaction.type}</span>
-                    <span class="model">${interaction.model}</span>
+                    <span>${this.escapeHtml(interaction.type)}</span>
+                    <span class="model">${this.escapeHtml(interaction.model)}</span>
                     <span class="timestamp">${new Date(interaction.created_at).toLocaleString()}</span>
                 </div>
                 <div class="audit-details">
-                    <span>Time: ${interaction.response_time?.toFixed(2)}s</span>
+                    <span>Time: ${interaction.response_time?.toFixed(2) || 'N/A'}s</span>
                 </div>
             </div>
         `).join('');
@@ -601,25 +669,83 @@ class HeliosOS {
     showLoginDialog() {
         const dialog = document.createElement('div');
         dialog.className = 'modal-overlay';
+        dialog.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+
         dialog.innerHTML = `
-            <div class="modal">
-                <div class="modal-header">
+            <div class="modal" style="
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                min-width: 300px;
+                max-width: 400px;
+            ">
+                <div class="modal-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                ">
                     <h3>Login to HeliosOS</h3>
-                    <button onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    <button onclick="this.closest('.modal-overlay').remove()" style="
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                    ">&times;</button>
                 </div>
                 <div class="modal-body">
                     <form id="login-form">
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" id="login-username" required>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px;">Username</label>
+                            <input type="text" id="login-username" required style="
+                                width: 100%;
+                                padding: 8px;
+                                border: 1px solid #ccc;
+                                border-radius: 4px;
+                                box-sizing: border-box;
+                            ">
                         </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" id="login-password" required>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px;">Password</label>
+                            <input type="password" id="login-password" required style="
+                                width: 100%;
+                                padding: 8px;
+                                border: 1px solid #ccc;
+                                border-radius: 4px;
+                                box-sizing: border-box;
+                            ">
                         </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn primary">Login</button>
-                            <button type="button" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                        <div class="form-actions" style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: flex-end;
+                        ">
+                            <button type="button" onclick="this.closest('.modal-overlay').remove()" style="
+                                padding: 8px 16px;
+                                border: 1px solid #ccc;
+                                background: white;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">Cancel</button>
+                            <button type="submit" class="btn primary" style="
+                                padding: 8px 16px;
+                                background: #007bff;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">Login</button>
                         </div>
                     </form>
                 </div>
@@ -643,33 +769,103 @@ class HeliosOS {
     showRegisterDialog() {
         const dialog = document.createElement('div');
         dialog.className = 'modal-overlay';
+        dialog.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+
         dialog.innerHTML = `
-            <div class="modal">
-                <div class="modal-header">
+            <div class="modal" style="
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                min-width: 300px;
+                max-width: 400px;
+            ">
+                <div class="modal-header" style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                ">
                     <h3>Register for HeliosOS</h3>
-                    <button onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                    <button onclick="this.closest('.modal-overlay').remove()" style="
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                    ">&times;</button>
                 </div>
                 <div class="modal-body">
                     <form id="register-form">
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" id="register-username" required minlength="3">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px;">Username</label>
+                            <input type="text" id="register-username" required minlength="3" style="
+                                width: 100%;
+                                padding: 8px;
+                                border: 1px solid #ccc;
+                                border-radius: 4px;
+                                box-sizing: border-box;
+                            ">
                         </div>
-                        <div class="form-group">
-                            <label>Email (optional)</label>
-                            <input type="email" id="register-email">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px;">Email (optional)</label>
+                            <input type="email" id="register-email" style="
+                                width: 100%;
+                                padding: 8px;
+                                border: 1px solid #ccc;
+                                border-radius: 4px;
+                                box-sizing: border-box;
+                            ">
                         </div>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" id="register-password" required minlength="8">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px;">Password</label>
+                            <input type="password" id="register-password" required minlength="8" style="
+                                width: 100%;
+                                padding: 8px;
+                                border: 1px solid #ccc;
+                                border-radius: 4px;
+                                box-sizing: border-box;
+                            ">
                         </div>
-                        <div class="form-group">
-                            <label>Confirm Password</label>
-                            <input type="password" id="register-confirm" required minlength="8">
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 5px;">Confirm Password</label>
+                            <input type="password" id="register-confirm" required minlength="8" style="
+                                width: 100%;
+                                padding: 8px;
+                                border: 1px solid #ccc;
+                                border-radius: 4px;
+                                box-sizing: border-box;
+                            ">
                         </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn primary">Register</button>
-                            <button type="button" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                        <div class="form-actions" style="
+                            display: flex;
+                            gap: 10px;
+                            justify-content: flex-end;
+                        ">
+                            <button type="button" onclick="this.closest('.modal-overlay').remove()" style="
+                                padding: 8px 16px;
+                                border: 1px solid #ccc;
+                                background: white;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">Cancel</button>
+                            <button type="submit" class="btn primary" style="
+                                padding: 8px 16px;
+                                background: #007bff;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">Register</button>
                         </div>
                     </form>
                 </div>

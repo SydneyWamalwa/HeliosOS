@@ -1,391 +1,590 @@
+import time
 import logging
-from flask import Blueprint, current_app, render_template, request, jsonify, g
-from flask_limiter import RateLimitExceeded
-from app import db, limiter
-from app.models import User, CommandAudit, AIInteraction
-from app.auth import hash_password, authenticate_user, auth_required, admin_required
-from app.ai_client import get_ai_service, AIServiceError
-from app.exec_service import get_command_executor, CommandExecutionError
-from app.utils import validate_json, sanitize_input
+import subprocess
+from datetime import datetime
+from flask import Blueprint, request, jsonify, render_template, current_app
+from flask_login import login_required, current_user
+from sqlalchemy import text
+from app import db
+from app.models import CommandAudit, AIInteraction
+from app.ai_client import get_ai_service
 
 logger = logging.getLogger(__name__)
+
 main_bp = Blueprint('main', __name__)
-
-# Rate limiting decorators
-def api_rate_limit():
-    return limiter.limit("100 per hour, 1000 per day")
-
-def auth_rate_limit():
-    return limiter.limit("10 per minute, 100 per hour")
-
-@main_bp.errorhandler(RateLimitExceeded)
-def handle_rate_limit(error):
-    return jsonify({
-        'error': 'rate_limit_exceeded',
-        'message': 'Too many requests. Please try again later.',
-        'retry_after': error.retry_after
-    }), 429
 
 @main_bp.route('/')
 def index():
-    """Main application interface."""
+    """Main application page"""
     return render_template('index.html')
 
 @main_bp.route('/health')
 def health_check():
-    """Comprehensive health check endpoint."""
+    """System health check endpoint"""
     try:
-        # Database check
-        db.session.execute('SELECT 1')
+        # Database health check with proper text() wrapper
+        with db.engine.connect() as connection:
+            connection.execute(text('SELECT 1'))
         db_status = 'healthy'
     except Exception as e:
-        logger.error(f"Database health check failed: {str(e)}")
+        logger.error(f"Database health check failed: {e}")
         db_status = 'unhealthy'
 
-    # AI service check
+    # AI service health check
     try:
         ai_service = get_ai_service()
         ai_health = ai_service.health_check()
+        ai_status = ai_health.get('status', 'unknown')
     except Exception as e:
-        logger.error(f"AI health check failed: {str(e)}")
-        ai_health = {'status': 'error', 'error': str(e)}
+        logger.error(f"AI service health check failed: {e}")
+        ai_status = 'unhealthy'
 
-    overall_status = 'healthy' if db_status == 'healthy' and ai_health['status'] == 'healthy' else 'degraded'
+    # Overall system status
+    system_status = 'healthy' if db_status == 'healthy' and ai_status == 'healthy' else 'degraded'
 
-    return jsonify({
-        'service': 'helios-os',
-        'status': overall_status,
+    status_data = {
+        'status': system_status,
+        'timestamp': time.time(),
         'components': {
             'database': db_status,
-            'ai_service': ai_health,
-            'command_executor': 'healthy'
-        },
-        'version': '1.0.0',
-        'timestamp': time.time()
-    })
+            'ai_service': {
+                'status': ai_status,
+                'models_available': ['facebook/bart-large-cnn', 'microsoft/DialoGPT-medium']
+            }
+        }
+    }
 
-# Authentication endpoints
-@main_bp.route('/api/auth/register', methods=['POST'])
-@auth_rate_limit()
-def register():
-    """User registration endpoint."""
-    try:
-        data = validate_json(request.get_json())
-        username = sanitize_input(data.get('username', ''))
-        password = data.get('password', '')
-        email = sanitize_input(data.get('email', ''))
-
-        # Validation
-        if not username or len(username) < 3:
-            return jsonify({'error': 'Username must be at least 3 characters'}), 400
-
-        if not password or len(password) < 8:
-            return jsonify({'error': 'Password must be at least 8 characters'}), 400
-
-        # Check if user exists
-        if User.query.filter_by(username=username).first():
-            return jsonify({'error': 'Username already exists'}), 409
-
-        if email and User.query.filter_by(email=email).first():
-            return jsonify({'error': 'Email already registered'}), 409
-
-        # Create user
-        user = User(
-            username=username,
-            email=email if email else None,
-            password_hash=hash_password(password),
-            profile={'created_via': 'registration'}
-        )
-
-        db.session.add(user)
-        db.session.commit()
-
-        logger.info(f"New user registered: {username}")
-
-        # Create session token
-        _, token = authenticate_user(username, password)
-
-        return jsonify({
-            'success': True,
-            'token': token,
-            'user': user.to_dict()
-        }), 201
-
-    except Exception as e:
-        logger.error(f"Registration error: {str(e)}")
-        db.session.rollback()
-        return jsonify({'error': 'Registration failed'}), 500
-
-@main_bp.route('/api/auth/login', methods=['POST'])
-@auth_rate_limit()
-def login():
-    """User login endpoint."""
-    try:
-        data = validate_json(request.get_json())
-        username = sanitize_input(data.get('username', ''))
-        password = data.get('password', '')
-
-        if not username or not password:
-            return jsonify({'error': 'Username and password required'}), 400
-
-        user, token = authenticate_user(username, password)
-
-        logger.info(f"User logged in: {username}")
-
-        return jsonify({
-            'success': True,
-            'token': token,
-            'user': user.to_dict(include_sensitive=True)
-        })
-
-    except Exception as e:
-        logger.warning(f"Login failed for {username}: {str(e)}")
-        return jsonify({'error': 'Invalid credentials'}), 401
-
-@main_bp.route('/api/auth/logout', methods=['POST'])
-@auth_required
-def logout():
-    """User logout endpoint."""
-    # In a production system, you'd invalidate the token
-    # For now, we'll just log the logout
-    logger.info(f"User logged out: {g.current_user.username}")
-    return jsonify({'success': True, 'message': 'Logged out successfully'})
-
-# AI endpoints
-@main_bp.route('/api/ai/summarize', methods=['POST'])
-@auth_required
-@api_rate_limit()
-def summarize_text():
-    """Text summarization endpoint."""
-    try:
-        data = validate_json(request.get_json())
-        text = data.get('text', '').strip()
-
-        if not text:
-            return jsonify({'summary': '', 'word_count': 0})
-
-        if len(text) > 10000:  # Limit input size
-            return jsonify({'error': 'Text too long (max 10,000 characters)'}), 400
-
-        ai_service = get_ai_service()
-        summary = ai_service.summarize(text)
-
-        return jsonify({
-            'success': True,
-            'summary': summary,
-            'original_length': len(text),
-            'summary_length': len(summary),
-            'compression_ratio': round(len(summary) / len(text), 2) if text else 0
-        })
-
-    except AIServiceError as e:
-        logger.error(f"AI summarization error: {str(e)}")
-        return jsonify({'error': 'Summarization service unavailable'}), 503
-
-    except Exception as e:
-        logger.error(f"Summarization error: {str(e)}")
-        return jsonify({'error': 'Summarization failed'}), 500
+    return jsonify(status_data)
 
 @main_bp.route('/api/ai/chat', methods=['POST'])
-@auth_required
-@api_rate_limit()
-def chat_with_leo():
-    """Chat with Leo AI assistant."""
+@login_required
+def ai_chat():
+    """AI chat endpoint"""
+    start_time = time.time()
+
     try:
-        data = validate_json(request.get_json())
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
         messages = data.get('messages', [])
 
         if not messages:
             return jsonify({'error': 'No messages provided'}), 400
 
-        # Validate message format
-        for msg in messages:
-            if not isinstance(msg, dict) or 'role' not in msg or 'content' not in msg:
-                return jsonify({'error': 'Invalid message format'}), 400
-
-        # Limit conversation history
-        messages = messages[-10:]  # Keep last 10 messages
-
+        # Get AI service
         ai_service = get_ai_service()
-        response = ai_service.chat(messages)
+
+        # Generate response
+        response_text = ai_service.chat(messages)
+        response_time = time.time() - start_time
+
+        # Log the AI interaction
+        try:
+            interaction = AIInteraction(
+                user_id=current_user.id,
+                interaction_type='chat',
+                input_text=str(messages[-1].get('content', ''))[:1000],
+                output_text=response_text[:2000],
+                model_used='chat-model',
+                success=True,
+                response_time=response_time
+            )
+            db.session.add(interaction)
+            db.session.commit()
+        except Exception as e:
+            logger.error(f"Failed to log AI interaction: {e}")
+            db.session.rollback()
 
         return jsonify({
             'success': True,
-            'response': response,
-            'conversation_length': len(messages)
+            'response': response_text
         })
 
-    except AIServiceError as e:
-        logger.error(f"AI chat error: {str(e)}")
-        return jsonify({'error': 'Chat service unavailable'}), 503
+    except Exception as e:
+        response_time = time.time() - start_time
+        logger.error(f"AI chat failed: {e}")
+
+        # Log failed interaction
+        try:
+            interaction = AIInteraction(
+                user_id=current_user.id if current_user.is_authenticated else None,
+                interaction_type='chat',
+                input_text=str(request.get_json().get('messages', []))[:1000] if request.get_json() else '',
+                output_text=None,
+                model_used='chat-model',
+                success=False,
+                error_message=str(e),
+                response_time=response_time
+            )
+            db.session.add(interaction)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"Failed to log failed AI interaction: {log_error}")
+            db.session.rollback()
+
+        return jsonify({'error': 'AI service unavailable'}), 500
+
+@main_bp.route('/api/ai/summarize', methods=['POST'])
+@login_required
+def ai_summarize():
+    """AI text summarization endpoint"""
+    start_time = time.time()
+
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        text = data.get('text', '').strip()
+
+        if not text:
+            return jsonify({'error': 'No text provided'}), 400
+
+        if len(text) > 10000:  # Limit text size
+            return jsonify({'error': 'Text too long (max 10,000 characters)'}), 400
+
+        # Get AI service
+        ai_service = get_ai_service()
+
+        # Generate summary
+        summary = ai_service.summarize(text)
+        response_time = time.time() - start_time
+
+        original_length = len(text)
+        summary_length = len(summary)
+        compression_ratio = round(original_length / summary_length, 2) if summary_length > 0 else 0
+
+        # Log the AI interaction
+        try:
+            interaction = AIInteraction(
+                user_id=current_user.id,
+                interaction_type='summarize',
+                input_text=text[:1000],
+                output_text=summary[:2000],
+                model_used='summary-model',
+                success=True,
+                response_time=response_time
+            )
+            db.session.add(interaction)
+            db.session.commit()
+        except Exception as e:
+            logger.error(f"Failed to log AI interaction: {e}")
+            db.session.rollback()
+
+        return jsonify({
+            'success': True,
+            'summary': summary,
+            'original_length': original_length,
+            'summary_length': summary_length,
+            'compression_ratio': compression_ratio
+        })
 
     except Exception as e:
-        logger.error(f"Chat error: {str(e)}")
-        return jsonify({'error': 'Chat failed'}), 500
+        response_time = time.time() - start_time
+        logger.error(f"AI summarization failed: {e}")
 
-# Command execution endpoints
-@main_bp.route('/api/exec/run', methods=['POST'])
-@auth_required
-@limiter.limit("30 per minute")
+        # Log failed interaction
+        try:
+            interaction = AIInteraction(
+                user_id=current_user.id if current_user.is_authenticated else None,
+                interaction_type='summarize',
+                input_text=str(request.get_json().get('text', ''))[:1000] if request.get_json() else '',
+                output_text=None,
+                model_used='summary-model',
+                success=False,
+                error_message=str(e),
+                response_time=response_time
+            )
+            db.session.add(interaction)
+            db.session.commit()
+        except Exception as log_error:
+            logger.error(f"Failed to log failed AI interaction: {log_error}")
+            db.session.rollback()
+
+        return jsonify({'error': 'Summarization service unavailable'}), 500
+
+@main_bp.route('/api/exec', methods=['POST'])
+@login_required
 def execute_command():
-    """Execute system command."""
+    """Execute system command with security restrictions"""
+    start_time = time.time()
+
     try:
-        data = validate_json(request.get_json())
-        command = sanitize_input(data.get('command', ''))
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+
+        command = data.get('command', '').strip()
 
         if not command:
             return jsonify({'error': 'No command provided'}), 400
 
-        executor = get_command_executor()
-        result, status_code = executor.execute_command(command, g.current_user)
+        # Security: Whitelist of allowed commands
+        allowed_commands = {
+            'ls', 'pwd', 'whoami', 'date', 'uptime', 'df', 'free', 'ps',
+            'top', 'htop', 'lscpu', 'lsmem', 'uname', 'hostname', 'id',
+            'groups', 'env', 'printenv', 'which', 'whereis', 'locate',
+            'find', 'grep', 'cat', 'head', 'tail', 'wc', 'sort', 'uniq'
+        }
 
-        return jsonify(result), status_code
+        # Extract base command
+        base_cmd = command.split()[0] if command.split() else ''
+
+        if base_cmd not in allowed_commands:
+            return jsonify({
+                'error': f'Command "{base_cmd}" not allowed. Allowed commands: {", ".join(sorted(allowed_commands))}'
+            }), 403
+
+        # Execute command
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=30,  # 30 second timeout
+                cwd=os.path.expanduser('~')  # Run in user home directory
+            )
+
+            execution_time = time.time() - start_time
+            output = result.stdout + result.stderr
+
+            # Log the command execution
+            try:
+                audit = CommandAudit(
+                    user_id=current_user.id,
+                    username=current_user.username,
+                    command=command,
+                    return_code=result.returncode,
+                    stdout=result.stdout[:2000],  # Limit output size
+                    stderr=result.stderr[:2000],
+                    execution_time=execution_time,
+                    ip_address=request.remote_addr
+                )
+                db.session.add(audit)
+                db.session.commit()
+            except Exception as e:
+                logger.error(f"Failed to log command audit: {e}")
+                db.session.rollback()
+
+            return jsonify({
+                'success': True,
+                'output': output,
+                'exit_code': result.returncode,
+                'execution_time': round(execution_time, 3)
+            })
+
+        except subprocess.TimeoutExpired:
+            execution_time = time.time() - start_time
+            error_msg = f'Command "{command}" timed out after 30 seconds'
+
+            # Log timeout
+            try:
+                audit = CommandAudit(
+                    user_id=current_user.id,
+                    username=current_user.username,
+                    command=command,
+                    return_code=-1,
+                    stderr=error_msg,
+                    execution_time=execution_time,
+                    ip_address=request.remote_addr
+                )
+                db.session.add(audit)
+                db.session.commit()
+            except Exception as e:
+                logger.error(f"Failed to log command audit: {e}")
+                db.session.rollback()
+
+            return jsonify({'error': error_msg}), 408
+
+        except Exception as e:
+            execution_time = time.time() - start_time
+            error_msg = f'Command execution failed: {str(e)}'
+
+            # Log execution error
+            try:
+                audit = CommandAudit(
+                    user_id=current_user.id,
+                    username=current_user.username,
+                    command=command,
+                    return_code=-1,
+                    stderr=error_msg,
+                    execution_time=execution_time,
+                    ip_address=request.remote_addr
+                )
+                db.session.add(audit)
+                db.session.commit()
+            except Exception as e:
+                logger.error(f"Failed to log command audit: {e}")
+                db.session.rollback()
+
+            return jsonify({'error': error_msg}), 500
 
     except Exception as e:
-        logger.error(f"Command execution error: {str(e)}")
-        return jsonify({'error': 'Command execution failed'}), 500
+        logger.error(f"Command execution endpoint failed: {e}")
+        return jsonify({'error': 'Command execution service unavailable'}), 500
 
-@main_bp.route('/api/exec/commands', methods=['GET'])
-@auth_required
-def get_allowed_commands():
-    """Get list of allowed commands."""
-    executor = get_command_executor()
-    commands = executor.get_allowed_commands()
-
-    return jsonify({
-        'success': True,
-        'commands': commands,
-        'total': len(commands)
-    })
-
-# Audit and monitoring endpoints
-@main_bp.route('/api/audit/commands', methods=['GET'])
-@auth_required
+@main_bp.route('/api/audit/commands')
+@login_required
 def get_command_audit():
-    """Get command execution audit trail."""
+    """Get command audit history"""
     try:
         page = request.args.get('page', 1, type=int)
-        per_page = min(request.args.get('per_page', 20, type=int), 100)
+        per_page = min(request.args.get('per_page', 20, type=int), 100)  # Max 100 per page
 
-        # Users can only see their own audits unless they're admin
-        query = CommandAudit.query
-        if not g.current_user.is_admin:
-            query = query.filter_by(user_id=g.current_user.id)
+        # Admin can see all audits, regular users only their own
+        if current_user.is_admin:
+            query = CommandAudit.query
+        else:
+            query = CommandAudit.query.filter_by(user_id=current_user.id)
 
-        audits = query.order_by(CommandAudit.created_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        audits = query.order_by(CommandAudit.created_at.desc())\
+            .paginate(page=page, per_page=per_page, error_out=False)
+
+        audit_data = [audit.to_dict(include_output=False) for audit in audits.items]
 
         return jsonify({
             'success': True,
-            'audits': [audit.to_dict() for audit in audits.items],
+            'audits': audit_data,
             'pagination': {
                 'page': page,
                 'per_page': per_page,
                 'total': audits.total,
-                'pages': audits.pages
+                'pages': audits.pages,
+                'has_next': audits.has_next,
+                'has_prev': audits.has_prev
             }
         })
 
     except Exception as e:
-        logger.error(f"Audit retrieval error: {str(e)}")
-        return jsonify({'error': 'Failed to retrieve audit data'}), 500
+        logger.error(f"Failed to get command audit: {e}")
+        return jsonify({'error': 'Audit service unavailable'}), 500
 
-@main_bp.route('/api/audit/ai', methods=['GET'])
-@auth_required
+@main_bp.route('/api/audit/ai')
+@login_required
 def get_ai_audit():
-    """Get AI interaction audit trail."""
+    """Get AI interaction audit history"""
     try:
         page = request.args.get('page', 1, type=int)
-        per_page = min(request.args.get('per_page', 20, type=int), 100)
+        per_page = min(request.args.get('per_page', 20, type=int), 100)  # Max 100 per page
 
-        query = AIInteraction.query
-        if not g.current_user.is_admin:
-            query = query.filter_by(user_id=g.current_user.id)
+        # Admin can see all interactions, regular users only their own
+        if current_user.is_admin:
+            query = AIInteraction.query
+        else:
+            query = AIInteraction.query.filter_by(user_id=current_user.id)
 
-        interactions = query.order_by(AIInteraction.created_at.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        interactions = query.order_by(AIInteraction.created_at.desc())\
+            .paginate(page=page, per_page=per_page, error_out=False)
+
+        interaction_data = []
+        for interaction in interactions.items:
+            data = {
+                'id': interaction.id,
+                'type': interaction.interaction_type,
+                'model': interaction.model_used,
+                'success': interaction.success,
+                'response_time': interaction.response_time,
+                'created_at': interaction.created_at.isoformat() if interaction.created_at else None
+            }
+            # Only include error message if not successful
+            if not interaction.success and interaction.error_message:
+                data['error_message'] = interaction.error_message
+            interaction_data.append(data)
 
         return jsonify({
             'success': True,
-            'interactions': [
-                {
-                    'id': i.id,
-                    'type': i.interaction_type,
-                    'model': i.model_used,
-                    'response_time': i.response_time,
-                    'success': i.success,
-                    'created_at': i.created_at.isoformat()
-                } for i in interactions.items
-            ],
+            'interactions': interaction_data,
             'pagination': {
                 'page': page,
                 'per_page': per_page,
                 'total': interactions.total,
-                'pages': interactions.pages
+                'pages': interactions.pages,
+                'has_next': interactions.has_next,
+                'has_prev': interactions.has_prev
             }
         })
 
     except Exception as e:
-        logger.error(f"AI audit retrieval error: {str(e)}")
-        return jsonify({'error': 'Failed to retrieve AI audit data'}), 500
+        logger.error(f"Failed to get AI audit: {e}")
+        return jsonify({'error': 'Audit service unavailable'}), 500
 
-# Admin endpoints
-@main_bp.route('/api/admin/users', methods=['GET'])
-@admin_required
-def get_users():
-    """Get all users (admin only)."""
+@main_bp.route('/api/user/profile')
+@login_required
+def get_user_profile():
+    """Get current user's profile"""
     try:
-        users = User.query.order_by(User.created_at.desc()).all()
         return jsonify({
             'success': True,
-            'users': [user.to_dict() for user in users],
-            'total': len(users)
+            'user': current_user.to_dict(include_sensitive=True)
         })
     except Exception as e:
-        logger.error(f"User retrieval error: {str(e)}")
-        return jsonify({'error': 'Failed to retrieve users'}), 500
+        logger.error(f"Failed to get user profile: {e}")
+        return jsonify({'error': 'Profile service unavailable'}), 500
 
-@main_bp.route('/api/admin/stats', methods=['GET'])
-@admin_required
-def get_system_stats():
-    """Get system statistics (admin only)."""
+@main_bp.route('/api/user/profile', methods=['PUT'])
+@login_required
+def update_user_profile():
+    """Update current user's profile"""
     try:
-        from sqlalchemy import func
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
 
-        # User statistics
-        total_users = User.query.count()
-        active_users = User.query.filter_by(is_active=True).count()
+        # Allow updating email and profile data
+        if 'email' in data:
+            email = data['email'].strip()
+            if email:
+                # Check if email is already taken by another user
+                existing = db.session.query(User).filter(
+                    User.email == email,
+                    User.id != current_user.id
+                ).first()
+                if existing:
+                    return jsonify({'error': 'Email already taken'}), 400
+                current_user.email = email
+            else:
+                current_user.email = None
 
-        # Command statistics
-        total_commands = CommandAudit.query.count()
-        recent_commands = CommandAudit.query.filter(
-            CommandAudit.created_at > func.now() - timedelta(days=7)
+        if 'profile' in data and isinstance(data['profile'], dict):
+            current_user.profile = {**current_user.profile, **data['profile']}
+
+        current_user.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'user': current_user.to_dict(include_sensitive=True)
+        })
+
+    except Exception as e:
+        logger.error(f"Failed to update user profile: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Profile update failed'}), 500
+
+@main_bp.route('/api/stats')
+@login_required
+def get_user_stats():
+    """Get user statistics"""
+    try:
+        # Get command execution stats
+        total_commands = CommandAudit.query.filter_by(user_id=current_user.id).count()
+        successful_commands = CommandAudit.query.filter_by(
+            user_id=current_user.id,
+            return_code=0
         ).count()
 
-        # AI statistics
-        total_ai_interactions = AIInteraction.query.count()
-        successful_ai = AIInteraction.query.filter_by(success=True).count()
+        # Get AI interaction stats
+        total_ai_interactions = AIInteraction.query.filter_by(user_id=current_user.id).count()
+        successful_ai_interactions = AIInteraction.query.filter_by(
+            user_id=current_user.id,
+            success=True
+        ).count()
+
+        # Calculate success rates
+        cmd_success_rate = (successful_commands / total_commands * 100) if total_commands > 0 else 0
+        ai_success_rate = (successful_ai_interactions / total_ai_interactions * 100) if total_ai_interactions > 0 else 0
+
+        stats = {
+            'commands': {
+                'total': total_commands,
+                'successful': successful_commands,
+                'success_rate': round(cmd_success_rate, 1)
+            },
+            'ai_interactions': {
+                'total': total_ai_interactions,
+                'successful': successful_ai_interactions,
+                'success_rate': round(ai_success_rate, 1)
+            },
+            'user': {
+                'username': current_user.username,
+                'member_since': current_user.created_at.strftime('%Y-%m-%d') if current_user.created_at else None,
+                'last_login': current_user.last_login.strftime('%Y-%m-%d %H:%M') if current_user.last_login else None
+            }
+        }
 
         return jsonify({
             'success': True,
-            'stats': {
-                'users': {
-                    'total': total_users,
-                    'active': active_users
-                },
-                'commands': {
-                    'total': total_commands,
-                    'last_7_days': recent_commands
-                },
-                'ai_interactions': {
-                    'total': total_ai_interactions,
-                    'success_rate': round(successful_ai / total_ai_interactions * 100, 2) if total_ai_interactions > 0 else 0
-                }
+            'stats': stats
+        })
+
+    except Exception as e:
+        logger.error(f"Failed to get user stats: {e}")
+        return jsonify({'error': 'Stats service unavailable'}), 500
+
+# Admin-only routes
+@main_bp.route('/api/admin/users')
+@login_required
+def admin_get_users():
+    """Admin: Get all users"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
+
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = min(request.args.get('per_page', 20, type=int), 100)
+
+        users = User.query.order_by(User.created_at.desc())\
+            .paginate(page=page, per_page=per_page, error_out=False)
+
+        user_data = [user.to_dict() for user in users.items]
+
+        return jsonify({
+            'success': True,
+            'users': user_data,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': users.total,
+                'pages': users.pages
             }
         })
 
     except Exception as e:
-        logger.error(f"Stats retrieval error: {str(e)}")
-        return jsonify({'error': 'Failed to retrieve statistics'}), 500
+        logger.error(f"Failed to get users: {e}")
+        return jsonify({'error': 'User service unavailable'}), 500
+
+@main_bp.route('/api/admin/system')
+@login_required
+def admin_system_info():
+    """Admin: Get system information"""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
+
+    try:
+        import psutil
+        import platform
+
+        system_info = {
+            'platform': {
+                'system': platform.system(),
+                'release': platform.release(),
+                'version': platform.version(),
+                'machine': platform.machine(),
+                'processor': platform.processor()
+            },
+            'resources': {
+                'cpu_percent': psutil.cpu_percent(interval=1),
+                'memory': {
+                    'total': psutil.virtual_memory().total,
+                    'available': psutil.virtual_memory().available,
+                    'percent': psutil.virtual_memory().percent
+                },
+                'disk': {
+                    'total': psutil.disk_usage('/').total,
+                    'free': psutil.disk_usage('/').free,
+                    'percent': psutil.disk_usage('/').percent
+                }
+            },
+            'uptime': time.time() - psutil.boot_time()
+        }
+
+        return jsonify({
+            'success': True,
+            'system': system_info
+        })
+
+    except Exception as e:
+        logger.error(f"Failed to get system info: {e}")
+        return jsonify({'error': 'System info unavailable'}), 500
