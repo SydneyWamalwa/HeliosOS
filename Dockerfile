@@ -1,50 +1,37 @@
-FROM ubuntu:22.04
+FROM python:3.11-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV DISPLAY=:1
-ENV NOVNC_PORT=8080
-ENV VNC_PASS=aurora123
-ENV HOME=/root
-
-# Install packages
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    xvfb \
-    x11vnc \
-    fluxbox \
-    xterm \
-    wget \
-    python3 python3-pip python3-venv \
-    net-tools x11-utils \
-    supervisor \
-    git \
-    ca-certificates \
-    locales \
+    gcc \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Locale (avoid locale warnings)
-RUN locale-gen en_US.UTF-8
-ENV LANG=en_US.UTF-8
-ENV LANGUAGE=en_US:en
-ENV LC_ALL=en_US.UTF-8
+# Create app user
+RUN groupadd -r helios && useradd -r -g helios helios
 
-# Install noVNC (websockify included)
-RUN git clone https://github.com/novnc/noVNC.git /opt/noVNC \
- && git clone https://github.com/novnc/websockify /opt/noVNC/utils/websockify
+# Set working directory
+WORKDIR /app
 
-# Create app dir and copy files
-WORKDIR /opt/app
-COPY app ./app
-COPY web ./web
-COPY start.sh /opt/start.sh
-RUN chmod +x /opt/start.sh
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Python deps
-RUN python3 -m pip install --upgrade pip
-RUN python3 -m pip install fastapi uvicorn[standard] python-multipart requests
+# Copy application code
+COPY . .
 
-# Expose noVNC port and API port
-EXPOSE ${NOVNC_PORT}
-EXPOSE 8000
+# Create necessary directories
+RUN mkdir -p logs static/novnc templates
+RUN chown -R helios:helios /app
 
-# Start everything
-CMD ["/opt/start.sh"]
+# Switch to non-root user
+USER helios
+
+# Expose port
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
+
+# Run application
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "wsgi:app"]
