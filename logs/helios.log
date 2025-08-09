@@ -1,0 +1,146 @@
+2025-08-10 00:14:37,646 INFO: Database tables created successfully [in /home/sydney/HeliosOS/app/__init__.py:91]
+2025-08-10 00:14:59,154 ERROR: Summarization failed: RetryError[<Future at 0x7f9b70632150 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:14:59,211 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:15:29,278 ERROR: Summarization failed: RetryError[<Future at 0x7f9b703628a0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:15:29,281 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:15:59,303 ERROR: Summarization failed: RetryError[<Future at 0x7f9b70363b60 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:15:59,305 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:16:29,446 ERROR: Summarization failed: RetryError[<Future at 0x7f9b70398c50 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:16:29,449 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:16:59,253 ERROR: Summarization failed: RetryError[<Future at 0x7f9b70399f70 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:16:59,254 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:17:29,289 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7039b020 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:17:29,290 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:17:59,296 ERROR: Summarization failed: RetryError[<Future at 0x7f9b703b8350 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:17:59,298 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:18:29,293 ERROR: Summarization failed: RetryError[<Future at 0x7f9b703b9400 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:18:29,294 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:19:05,291 ERROR: Summarization failed: RetryError[<Future at 0x7f9b703ba720 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:19:05,293 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:20:05,300 ERROR: Summarization failed: RetryError[<Future at 0x7f9b703bb830 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:20:05,301 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:21:05,294 ERROR: Summarization failed: RetryError[<Future at 0x7f9b701ecad0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:21:05,296 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:22:05,294 ERROR: Summarization failed: RetryError[<Future at 0x7f9b701edbb0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:22:05,295 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:23:05,289 ERROR: Summarization failed: RetryError[<Future at 0x7f9b701eef30 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:23:05,291 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:24:05,202 ERROR: Summarization failed: RetryError[<Future at 0x7f9b701effb0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:24:05,204 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:25:05,283 ERROR: Summarization failed: RetryError[<Future at 0x7f9b70215370 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:25:05,285 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:26:05,304 ERROR: Summarization failed: RetryError[<Future at 0x7f9b70216510 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:26:05,306 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:27:05,289 ERROR: Summarization failed: RetryError[<Future at 0x7f9b702177d0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:27:05,292 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:28:05,302 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7023c920 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:28:05,303 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:29:05,293 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7023dc40 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:29:05,295 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:30:05,283 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7023edb0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:30:05,284 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:31:05,293 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7026c170 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:31:05,295 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:32:05,295 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7026d3a0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:32:05,297 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:33:05,289 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7026e720 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:33:05,290 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:34:05,291 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7026f8c0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:34:05,292 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:35:05,282 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7029cda0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:35:05,286 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:36:05,291 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7029e030 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:36:05,292 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:37:05,284 ERROR: Summarization failed: RetryError[<Future at 0x7f9b7029f440 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:37:05,286 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:38:05,306 ERROR: Summarization failed: RetryError[<Future at 0x7f9b702bc710 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:38:05,307 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:39:05,289 ERROR: Summarization failed: RetryError[<Future at 0x7f9b702bdac0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:39:05,292 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:40:04,167 ERROR: Summarization failed: RetryError[<Future at 0x7f9b702becc0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:40:04,169 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:40:29,289 ERROR: Summarization failed: RetryError[<Future at 0x7f9b700e0140 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:40:29,298 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:40:59,303 ERROR: Summarization failed: RetryError[<Future at 0x7f9b700e1340 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:40:59,318 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:42:00,356 ERROR: Summarization failed: RetryError[<Future at 0x7f9b700e2780 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:96]
+2025-08-10 00:42:00,360 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:234]
+2025-08-10 00:42:22,469 INFO: Database tables created successfully [in /home/sydney/HeliosOS/app/__init__.py:91]
+2025-08-10 00:42:29,937 ERROR: Summarization failed: RetryError[<Future at 0x7f688afb22d0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 00:42:29,977 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:265]
+2025-08-10 00:42:32,644 ERROR: Summarization failed: RetryError[<Future at 0x7f688b0d1bb0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 00:42:32,646 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:265]
+2025-08-10 00:42:45,935 INFO: Database tables created successfully [in /home/sydney/HeliosOS/app/__init__.py:91]
+2025-08-10 00:42:57,601 ERROR: Summarization failed: RetryError[<Future at 0x7ff7ca922e70 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 00:42:57,632 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:265]
+2025-08-10 00:43:03,303 ERROR: Summarization failed: RetryError[<Future at 0x7ff7ca9527b0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 00:43:03,306 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:265]
+2025-08-10 00:43:28,292 ERROR: Summarization failed: RetryError[<Future at 0x7ff7ca953b30 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 00:43:28,294 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:265]
+2025-08-10 00:43:33,359 ERROR: Summarization failed: RetryError[<Future at 0x7ff7ca988c20 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 00:43:33,361 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:265]
+2025-08-10 00:44:09,652 ERROR: Failed to create database tables: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "user"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "user"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/__init__.py:93]
+2025-08-10 00:44:23,012 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "user"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "user"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 00:44:23,659 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:44:25,985 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:44:28,282 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:44:28,283 ERROR: Summarization failed: RetryError[<Future at 0x7f8800287b00 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 00:44:28,305 ERROR: Failed to log AI interaction: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:265]
+2025-08-10 00:44:28,379 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "user"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "user"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 00:44:28,859 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:44:29,295 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "user"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "user"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 00:44:29,847 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:44:31,828 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:44:34,099 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:53:53,970 ERROR: Failed to create database tables: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/__init__.py:93]
+2025-08-10 00:53:58,975 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 00:54:01,332 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 00:54:08,655 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:54:08,716 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:54:12,877 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:54:12,993 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:54:25,044 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:54:25,046 ERROR: Summarization failed: RetryError[<Future at 0x7f77c9a18620 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 00:54:25,047 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 00:54:25,064 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:54:25,065 ERROR: Summarization failed: RetryError[<Future at 0x7f77c7b14290 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:108]
+2025-08-10 00:54:25,065 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:242]
+2025-08-10 00:54:29,201 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 00:54:29,308 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 00:54:39,214 ERROR: Request failed for model facebook/bart-large-cnn: HTTPSConnectionPool(host='api-inference.huggingface.co', port=443): Max retries exceeded with url: /models/facebook/bart-large-cnn (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f77c7bb6690>: Failed to resolve 'api-inference.huggingface.co' ([Errno -3] Temporary failure in name resolution)")) [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:54:39,318 ERROR: Request failed for model facebook/bart-large-cnn: HTTPSConnectionPool(host='api-inference.huggingface.co', port=443): Max retries exceeded with url: /models/facebook/bart-large-cnn (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x7f77c7bb5d00>: Failed to resolve 'api-inference.huggingface.co' ([Errno -3] Temporary failure in name resolution)")) [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-10 00:55:19,390 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]
+2025-08-10 00:55:19,427 ERROR: Database health check failed: (psycopg2.OperationalError) connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  password authentication failed for user "sydney"
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8) [in /home/sydney/HeliosOS/app/routes.py:30]

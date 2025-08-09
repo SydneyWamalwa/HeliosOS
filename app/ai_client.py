@@ -3,8 +3,7 @@ import logging
 from typing import Optional, Dict, Any
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from flask import current_app
-from app.models import AIInteraction, db
+from flask import current_app, has_app_context, g
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +15,12 @@ class HuggingFaceClient:
     """Production-ready HuggingFace API client."""
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or current_app.config.get('HUGGINGFACE_API_KEY', '')
+        # Only access current_app if we're in an app context
+        if has_app_context():
+            self.api_key = api_key or current_app.config.get('HUGGINGFACE_API_KEY', '')
+        else:
+            self.api_key = api_key or ''
+
         self.base_url = "https://api-inference.huggingface.co/models/"
         self.session = requests.Session()
 
@@ -46,11 +50,14 @@ class HuggingFaceClient:
 
             # Handle model loading status
             if isinstance(result, dict) and 'error' in result:
-                if 'loading' in result['error'].lower():
+                error_msg = result['error']
+                if 'loading' in error_msg.lower():
                     logger.warning(f"Model {model} is loading, retrying...")
                     raise AIServiceError("Model is loading")
+                elif 'authorization' in error_msg.lower() or 'token' in error_msg.lower():
+                    raise AIServiceError(f"Authentication error: {error_msg}")
                 else:
-                    raise AIServiceError(f"API Error: {result['error']}")
+                    raise AIServiceError(f"API Error: {error_msg}")
 
             return result
 
@@ -63,7 +70,12 @@ class HuggingFaceClient:
         if not text.strip():
             return ""
 
-        model = model or current_app.config.get('SUMMARY_MODEL', 'facebook/bart-large-cnn')
+        # Get model from config if available and in app context
+        if has_app_context():
+            model = model or current_app.config.get('SUMMARY_MODEL', 'facebook/bart-large-cnn')
+        else:
+            model = model or 'facebook/bart-large-cnn'
+
         start_time = time.time()
 
         try:
@@ -87,19 +99,24 @@ class HuggingFaceClient:
             elif isinstance(result, dict) and 'summary_text' in result:
                 summary = result['summary_text']
 
-            # Log interaction
-            self._log_interaction('summarize', text, summary, model, response_time, True)
+            # Log interaction (safely)
+            self._safe_log_interaction('summarize', text, summary, model, response_time, True)
 
             return summary or str(result)
 
         except Exception as e:
             logger.error(f"Summarization failed: {str(e)}")
-            self._log_interaction('summarize', text, None, model, time.time() - start_time, False, str(e))
+            self._safe_log_interaction('summarize', text, None, model, time.time() - start_time, False, str(e))
             return self._fallback_summary(text)
 
     def generate_chat_response(self, messages: list, model: Optional[str] = None) -> str:
         """Generate chat response using HuggingFace model."""
-        model = model or current_app.config.get('CHAT_MODEL', 'microsoft/DialoGPT-medium')
+        # Get model from config if available and in app context
+        if has_app_context():
+            model = model or current_app.config.get('CHAT_MODEL', 'microsoft/DialoGPT-medium')
+        else:
+            model = model or 'microsoft/DialoGPT-medium'
+
         start_time = time.time()
 
         # Format conversation
@@ -131,14 +148,14 @@ class HuggingFaceClient:
             if response:
                 response = self._clean_chat_response(response, conversation)
 
-            # Log interaction
-            self._log_interaction('chat', conversation, response, model, response_time, True)
+            # Log interaction (safely)
+            self._safe_log_interaction('chat', conversation, response, model, response_time, True)
 
             return response or "I'm having trouble generating a response right now."
 
         except Exception as e:
             logger.error(f"Chat generation failed: {str(e)}")
-            self._log_interaction('chat', conversation, None, model, time.time() - start_time, False, str(e))
+            self._safe_log_interaction('chat', conversation, None, model, time.time() - start_time, False, str(e))
             return self._fallback_chat_response(messages)
 
     def _format_conversation(self, messages: list) -> str:
@@ -206,15 +223,31 @@ class HuggingFaceClient:
         else:
             return "I understand. How else can I assist you with HeliosOS?"
 
-    def _log_interaction(self, interaction_type: str, input_text: str,
-                        output_text: Optional[str], model: str,
-                        response_time: float, success: bool,
-                        error_message: Optional[str] = None):
-        """Log AI interaction to database."""
+    def _safe_log_interaction(self, interaction_type: str, input_text: str,
+                            output_text: Optional[str], model: str,
+                            response_time: float, success: bool,
+                            error_message: Optional[str] = None):
+        """Safely log AI interaction to database."""
         try:
-            from flask import g
-            user_id = getattr(g, 'current_user', None)
-            user_id = user_id.id if user_id else None
+            # Only attempt database logging if we're in a Flask app context
+            if not has_app_context():
+                logger.debug("No Flask app context available, skipping database logging")
+                return
+
+            # Test database connection first
+            try:
+                from app.models import db
+                db.engine.execute("SELECT 1")
+            except Exception as db_error:
+                logger.warning(f"Database not available, skipping logging: {str(db_error)}")
+                return
+
+            # Import here to avoid circular imports
+            from app.models import AIInteraction
+
+            user_id = None
+            if hasattr(g, 'current_user') and g.current_user:
+                user_id = g.current_user.id
 
             interaction = AIInteraction(
                 user_id=user_id,
@@ -229,9 +262,12 @@ class HuggingFaceClient:
 
             db.session.add(interaction)
             db.session.commit()
+            logger.debug(f"Successfully logged {interaction_type} interaction")
 
         except Exception as e:
-            logger.error(f"Failed to log AI interaction: {str(e)}")
+            logger.warning(f"Failed to log AI interaction: {str(e)}")
+            # Don't re-raise the exception to avoid breaking the main functionality
+
 
 class AIService:
     """Main AI service interface."""
@@ -250,15 +286,18 @@ class AIService:
     def health_check(self) -> dict:
         """Check AI service health."""
         try:
-            test_summary = self.hf_client.summarize_text("This is a test.")
+            # Use a shorter test text to avoid rate limits
+            test_summary = self.hf_client.summarize_text("This is a short test for health check.")
+
             return {
                 'status': 'healthy',
                 'services': {
                     'huggingface': 'available' if self.hf_client.api_key else 'no_key'
                 },
-                'test_result': bool(test_summary)
+                'test_result': bool(test_summary and not test_summary.startswith('[Auto Summary]'))
             }
         except Exception as e:
+            logger.warning(f"Health check failed: {str(e)}")
             return {
                 'status': 'degraded',
                 'error': str(e),

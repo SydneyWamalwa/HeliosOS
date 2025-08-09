@@ -16,7 +16,10 @@ import logging
 # Import our services
 from app.ai_models import AIModelManager
 from app.webrtc_service import WebRTCService
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -27,6 +30,7 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+app.config['HUGGINGFACE_API_KEY'] = os.getenv('HUGGINGFACE_API_KEY')
 
 app = FastAPI(title="Helios OS - AI Cloud Desktop")
 
@@ -51,7 +55,7 @@ PROFILE: Dict[str, Any] = {"username": "Guest", "prefs": {}}
 # Expanded whitelisted commands (only first token is checked)
 ALLOWED_CMDS = {
     # File system navigation
-    "ls", "pwd", "cd", "find", "grep", "cat", "head", "tail", 
+    "ls", "pwd", "cd", "find", "grep", "cat", "head", "tail",
     # System info
     "whoami", "date", "uptime", "df", "free", "echo", "ps", "id", "top", "htop",
     # Network
@@ -111,13 +115,13 @@ async def get_session_data(request: Request) -> Optional[SessionData]:
     session_id = request.cookies.get("session_id")
     if not session_id or session_id not in SESSIONS:
         return None
-    
+
     session = SESSIONS[session_id]
     if datetime.now() > session["expires"]:
         # Session expired
         del SESSIONS[session_id]
         return None
-        
+
     return SessionData(
         user_id=session["user_id"],
         username=session["username"],
@@ -132,9 +136,9 @@ async def root():
 @app.get("/status")
 async def status():
     return {
-        "service": "Helios OS", 
-        "status": "ok", 
-        "time": int(time.time()), 
+        "service": "Helios OS",
+        "status": "ok",
+        "time": int(time.time()),
         "profile": PROFILE,
         "system_info": {
             "uptime": get_system_uptime(),
@@ -148,14 +152,14 @@ async def login(response: Response, username: str = "Guest"):
     # In production, this would validate credentials
     session_id = str(uuid.uuid4())
     user_id = str(uuid.uuid4())
-    
+
     # Store session (would use Redis in production)
     SESSIONS[session_id] = {
         "user_id": user_id,
         "username": username,
         "expires": datetime.now() + timedelta(hours=24)
     }
-    
+
     # Set session cookie
     response.set_cookie(
         key="session_id",
@@ -164,7 +168,7 @@ async def login(response: Response, username: str = "Guest"):
         max_age=86400,  # 24 hours
         samesite="lax"
     )
-    
+
     return {"ok": True, "username": username}
 
 @app.post("/auth/logout")
@@ -173,7 +177,7 @@ async def logout(response: Response, session: Optional[SessionData] = Depends(ge
         # Clear session from store
         if session.user_id in SESSIONS:
             del SESSIONS[session.user_id]
-    
+
     # Clear cookie regardless
     response.delete_cookie(key="session_id")
     return {"ok": True}
@@ -182,14 +186,14 @@ async def logout(response: Response, session: Optional[SessionData] = Depends(ge
 async def get_profile(session: Optional[SessionData] = Depends(get_session_data)):
     if not session:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    
+
     return PROFILE
 
 @app.post("/profile")
 async def set_profile(payload: Dict[str, Any], session: Optional[SessionData] = Depends(get_session_data)):
     if not session:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    
+
     # Update profile (would validate and persist to database in production)
     PROFILE.update(payload)
     return {"ok": True, "profile": PROFILE}
@@ -199,17 +203,17 @@ async def summarize(req: SummarizeRequest, session: Optional[SessionData] = Depe
     # Log usage (would store in database in production)
     user_id = session.user_id if session else "anonymous"
     print(f"Summarize request from user {user_id}, length: {len(req.text)}")
-    
+
     text = (req.text or "").strip()
     if not text:
         return {"summary": ""}
-    
+
     # Use our AI model manager to handle the request
     result = AIModelManager.get_summary(text)
-    
+
     # Log completion
     print(f"Summarize complete for user {user_id}, result length: {len(result.get('summary', ''))}")
-    
+
     return result
 
 @app.post("/chat")
@@ -217,16 +221,16 @@ async def chat(req: ChatRequest, session: Optional[SessionData] = Depends(get_se
     # Log usage (would store in database in production)
     user_id = session.user_id if session else "anonymous"
     print(f"Chat request from user {user_id}, messages: {len(req.messages)}")
-    
+
     # Convert Pydantic models to dictionaries for the AI manager
     messages = [msg.dict() for msg in req.messages] if req.messages else []
-    
+
     # Use our AI model manager to handle the request
     result = AIModelManager.get_chat_response(messages)
-    
+
     # Log completion
     print(f"Chat complete for user {user_id}, reply length: {len(result.get('reply', ''))}")
-    
+
     return result
 
 # System utility functions
@@ -267,10 +271,10 @@ def get_cpu_usage() -> Dict[str, Any]:
     try:
         # Simple CPU usage estimate using top
         completed = subprocess.run(
-            ["top", "-bn1"], 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE, 
-            timeout=2, 
+            ["top", "-bn1"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=2,
             text=True
         )
         if completed.returncode == 0:
@@ -300,47 +304,47 @@ async def exec_cmd(req: ExecRequest, session: Optional[SessionData] = Depends(ge
     # Log usage (would store in database in production)
     user_id = session.user_id if session else "anonymous"
     print(f"Exec request from user {user_id}, command: {req.cmd}")
-    
+
     cmdline = (req.cmd or "").strip()
     if not cmdline:
         raise HTTPException(status_code=400, detail="empty command")
-    
+
     # Parse command
     try:
         parts = shlex.split(cmdline)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"failed to parse command: {e}")
-    
+
     if len(parts) == 0:
         raise HTTPException(status_code=400, detail="empty command")
-    
+
     if parts[0] not in ALLOWED_CMDS:
         raise HTTPException(status_code=403, detail=f"command '{parts[0]}' not allowed")
-    
+
     # Set working directory if provided
     cwd = req.cwd if req.cwd else None
-    
+
     # Run safely with timeout and capture
     try:
         completed = subprocess.run(
-            parts, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE, 
+            parts,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             timeout=15,  # Extended timeout for more complex commands
             text=True,
             cwd=cwd
         )
-        
+
         result = {
             "cmd": cmdline,
             "returncode": completed.returncode,
             "stdout": completed.stdout,
             "stderr": completed.stderr
         }
-        
+
         # Log completion
         print(f"Exec complete for user {user_id}, return code: {completed.returncode}")
-        
+
         return result
     except subprocess.TimeoutExpired:
         raise HTTPException(status_code=504, detail="command timed out")
@@ -355,29 +359,29 @@ async def list_directory(path: str = "/", session: Optional[SessionData] = Depen
     """
     if not session:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    
+
     # Sanitize path to prevent directory traversal attacks
     path = os.path.normpath(path)
-    if path.startswith(".."): 
+    if path.startswith(".."):
         raise HTTPException(status_code=400, detail="Invalid path")
-    
+
     try:
         # Use ls command for safety and consistency
         completed = subprocess.run(
-            ["ls", "-la", path], 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE, 
-            timeout=5, 
+            ["ls", "-la", path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=5,
             text=True
         )
-        
+
         if completed.returncode != 0:
             return {"error": completed.stderr}
-        
+
         # Parse ls output
         entries = []
         lines = completed.stdout.strip().split('\n')
-        
+
         # Skip the total line and parse the rest
         for line in lines[1:] if lines else []:
             parts = line.split()
@@ -386,7 +390,7 @@ async def list_directory(path: str = "/", session: Optional[SessionData] = Depen
                 size = parts[4]
                 date = " ".join(parts[5:8])
                 name = " ".join(parts[8:])
-                
+
                 is_dir = permissions.startswith("d")
                 entries.append({
                     "name": name,
@@ -396,7 +400,7 @@ async def list_directory(path: str = "/", session: Optional[SessionData] = Depen
                     "permissions": permissions,
                     "modified": date
                 })
-        
+
         return {
             "path": path,
             "entries": entries
@@ -411,24 +415,24 @@ async def read_file(path: str, session: Optional[SessionData] = Depends(get_sess
     """
     if not session:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    
+
     # Sanitize path to prevent directory traversal attacks
     path = os.path.normpath(path)
-    if path.startswith(".."): 
+    if path.startswith(".."):
         raise HTTPException(status_code=400, detail="Invalid path")
-    
+
     try:
         # Check if file exists and is a file (not a directory)
         if not os.path.exists(path):
             raise HTTPException(status_code=404, detail="File not found")
-        
+
         if not os.path.isfile(path):
             raise HTTPException(status_code=400, detail="Path is not a file")
-        
+
         # Read file content
         with open(path, "r") as f:
             content = f.read()
-        
+
         return {
             "path": path,
             "content": content,
@@ -444,22 +448,22 @@ async def write_file(req: FileRequest, session: Optional[SessionData] = Depends(
     """
     if not session:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    
+
     # Sanitize path to prevent directory traversal attacks
     path = os.path.normpath(req.path)
-    if path.startswith(".."): 
+    if path.startswith(".."):
         raise HTTPException(status_code=400, detail="Invalid path")
-    
+
     try:
         # Ensure parent directory exists
         parent_dir = os.path.dirname(path)
         if parent_dir and not os.path.exists(parent_dir):
             os.makedirs(parent_dir, exist_ok=True)
-        
+
         # Write content to file
         with open(path, "w") as f:
             f.write(req.content or "")
-        
+
         return {
             "path": path,
             "size": os.path.getsize(path),
@@ -475,17 +479,17 @@ async def delete_file(req: FileRequest, session: Optional[SessionData] = Depends
     """
     if not session:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    
+
     # Sanitize path to prevent directory traversal attacks
     path = os.path.normpath(req.path)
-    if path.startswith(".."): 
+    if path.startswith(".."):
         raise HTTPException(status_code=400, detail="Invalid path")
-    
+
     try:
         # Check if path exists
         if not os.path.exists(path):
             raise HTTPException(status_code=404, detail="Path not found")
-        
+
         # Delete file or directory
         if os.path.isfile(path):
             os.remove(path)
@@ -496,13 +500,13 @@ async def delete_file(req: FileRequest, session: Optional[SessionData] = Depends
             except OSError:
                 # Directory not empty, use rm -r
                 subprocess.run(
-                    ["rm", "-r", path], 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE, 
-                    timeout=5, 
+                    ["rm", "-r", path],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=5,
                     check=True
                 )
-        
+
         return {
             "path": path,
             "success": True
@@ -517,29 +521,29 @@ async def search_files(req: SearchRequest, session: Optional[SessionData] = Depe
     """
     if not session:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    
+
     # Sanitize path to prevent directory traversal attacks
     path = os.path.normpath(req.path or "/")
-    if path.startswith(".."): 
+    if path.startswith(".."):
         raise HTTPException(status_code=400, detail="Invalid path")
-    
+
     try:
         # Use find command for searching
         completed = subprocess.run(
-            ["find", path, "-name", f"*{req.query}*", "-type", "f"], 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE, 
-            timeout=10, 
+            ["find", path, "-name", f"*{req.query}*", "-type", "f"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=10,
             text=True
         )
-        
+
         if completed.returncode != 0:
             return {"error": completed.stderr}
-        
+
         # Parse results
         results = []
         lines = completed.stdout.strip().split('\n')
-        
+
         for line in lines:
             if line.strip():
                 file_path = line.strip()
@@ -548,11 +552,11 @@ async def search_files(req: SearchRequest, session: Optional[SessionData] = Depe
                     "name": os.path.basename(file_path),
                     "size": os.path.getsize(file_path) if os.path.exists(file_path) else 0
                 })
-                
+
                 # Limit results
                 if len(results) >= req.max_results:
                     break
-        
+
         return {
             "query": req.query,
             "path": path,
@@ -570,7 +574,7 @@ async def list_applications(session: Optional[SessionData] = Depends(get_session
     """
     if not session:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    
+
     # In a real system, this would query a database or package manager
     # For this POC, we'll return a static list of common Linux applications
     apps = [
@@ -647,7 +651,7 @@ async def list_applications(session: Optional[SessionData] = Depends(get_session
             "description": "Configure system preferences and options"
         }
     ]
-    
+
     return {
         "applications": apps
     }
@@ -659,7 +663,7 @@ async def launch_application(app_name: str, session: Optional[SessionData] = Dep
     """
     if not session:
         return JSONResponse(status_code=401, content={"error": "Not authenticated"})
-    
+
     # Map of allowed applications and their commands
     allowed_apps = {
         "terminal": "xterm",
@@ -672,24 +676,24 @@ async def launch_application(app_name: str, session: Optional[SessionData] = Dep
         "media-player": "vlc",
         "settings": "xterm -e nano ~/.config/helios/settings.json"
     }
-    
+
     if app_name.lower() not in allowed_apps:
         raise HTTPException(status_code=403, detail=f"Application '{app_name}' not allowed or not found")
-    
+
     command = allowed_apps[app_name.lower()]
-    
+
     try:
         # Launch the application in the background
         process = subprocess.Popen(
-            command.split(), 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE, 
+            command.split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             start_new_session=True
         )
-        
+
         # Log the application launch
         logger.info(f"User {session.username} launched application: {app_name}")
-        
+
         # Don't wait for it to complete
         return {
             "app": app_name,

@@ -4,13 +4,15 @@ from datetime import datetime, timedelta
 from functools import wraps
 import bcrypt
 import jwt
-from flask import current_app, request, jsonify, g
+from flask import current_app, request, jsonify, g, Blueprint
 from app.models import User, UserSession, db
 
 class AuthError(Exception):
     def __init__(self, message, status_code=401):
         self.message = message
         self.status_code = status_code
+
+auth_bp = Blueprint('auth', __name__)
 
 def hash_password(password: str) -> str:
     """Hash password using bcrypt with configurable rounds."""
