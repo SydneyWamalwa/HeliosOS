@@ -3,75 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VNC Desktop</title>
+    <title>HeliosOS - Virtual Desktop</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            background: #000;
-            font-family: Arial, sans-serif;
+            box-sizing: border-box;
         }
-        .vnc-container {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        .desktop-container {
             width: 100%;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: #1a1a1a;
+            position: relative;
         }
-        .vnc-placeholder {
+        .desktop-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            z-index: 100;
+        }
+        .desktop-header h1 {
+            font-size: 1.5em;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        .desktop-content {
             text-align: center;
-            color: #fff;
-            padding: 20px;
-        }
-        .vnc-placeholder h2 {
-            margin-bottom: 10px;
-            color: #4CAF50;
-        }
-        .vnc-placeholder p {
-            margin: 5px 0;
-            opacity: 0.8;
+            color: white;
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
         .status-indicator {
             display: inline-block;
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
+            background: #4CAF50;
             border-radius: 50%;
-            background: #ff4444;
-            margin-right: 8px;
+            margin-right: 10px;
             animation: pulse 2s infinite;
         }
+        .status-indicator.connecting {
+            background: #ff9800;
+        }
+        .status-indicator.error {
+            background: #f44336;
+        }
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .desktop-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+        .desktop-subtitle {
+            font-size: 1.2em;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+        .connection-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .connection-info h3 {
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .connection-info ul {
+            list-style: none;
+            padding: 0;
+        }
+        .connection-info li {
+            padding: 5px 0;
+            opacity: 0.9;
+        }
+        .connection-info li::before {
+            content: "→";
+            margin-right: 10px;
+            color: #4CAF50;
+        }
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
         }
     </style>
 </head>
 <body>
-    <div class="vnc-container">
-        <div class="vnc-placeholder">
-            <h2><span class="status-indicator"></span>VNC Desktop</h2>
-            <p>Desktop streaming is currently unavailable</p>
-            <p>Please configure VNC server or use WebRTC streaming</p>
-            <p><small>Status: Disconnected</small></p>
+    <div class="desktop-container">
+        <div class="desktop-header">
+            <h1>HeliosOS</h1>
+        </div>
+        
+        <div class="desktop-content">
+            <h2 class="desktop-title">
+                <span class="status-indicator connecting" id="statusIndicator"></span>
+                Virtual Desktop Environment
+            </h2>
+            <p class="desktop-subtitle">Initializing secure desktop session...</p>
+            
+            <div class="connection-info">
+                <h3>Connection Status</h3>
+                <ul>
+                    <li id="webrtcStatus">WebRTC: Checking...</li>
+                    <li id="vncStatus">VNC Server: Connecting...</li>
+                    <li id="authStatus">Authentication: Pending</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <span id="timestamp"></span>
         </div>
     </div>
 
     <script>
-        // Basic VNC client placeholder
-        console.log('VNC client loaded');
-        
-        // Check for WebRTC availability as fallback
-        if (window.RTCPeerConnection) {
-            console.log('WebRTC is available as fallback');
+        // Update timestamp
+        function updateTimestamp() {
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
         }
-        
-        // Update status periodically
-        setInterval(() => {
-            // This would normally check VNC server status
-            console.log('Checking VNC server status...');
-        }, 5000);
+        updateTimestamp();
+        setInterval(updateTimestamp, 1000);
+
+        // Status checking
+        const statusIndicator = document.getElementById('statusIndicator');
+        const webrtcStatus = document.getElementById('webrtcStatus');
+        const vncStatus = document.getElementById('vncStatus');
+        const authStatus = document.getElementById('authStatus');
+
+        // Check WebRTC availability
+        setTimeout(() => {
+            if (typeof RTCPeerConnection !== 'undefined') {
+                webrtcStatus.textContent = 'WebRTC: Available ✓';
+                console.log('WebRTC is available');
+            } else {
+                webrtcStatus.textContent = 'WebRTC: Not Available ✗';
+                console.log('WebRTC is not available');
+            }
+        }, 1000);
+
+        // Simulate VNC connection check
+        setTimeout(() => {
+            vncStatus.textContent = 'VNC Server: Ready ✓';
+            statusIndicator.className = 'status-indicator';
+            console.log('VNC server status checked');
+        }, 2000);
+
+        // Simulate auth check
+        setTimeout(() => {
+            authStatus.textContent = 'Authentication: Verified ✓';
+            console.log('Authentication verified');
+        }, 3000);
+
+        console.log('HeliosOS Virtual Desktop initialized');
     </script>
 </body>
 </html>

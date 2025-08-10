@@ -76,6 +76,11 @@ class HuggingFaceClient:
         else:
             model = model or 'facebook/bart-large-cnn'
 
+        # If no API key is configured, use fallback immediately
+        if not self.api_key:
+            logger.warning("HuggingFace API key not configured, using fallback summary")
+            return self._fallback_summary(text)
+
         start_time = time.time()
 
         try:
@@ -116,6 +121,11 @@ class HuggingFaceClient:
             model = model or current_app.config.get('CHAT_MODEL', 'microsoft/DialoGPT-medium')
         else:
             model = model or 'microsoft/DialoGPT-medium'
+
+        # If no API key is configured, use fallback immediately
+        if not self.api_key:
+            logger.warning("HuggingFace API key not configured, using fallback chat response")
+            return self._fallback_chat_response(messages)
 
         start_time = time.time()
 
@@ -236,7 +246,7 @@ class HuggingFaceClient:
 
             # Test database connection first
             try:
-                from app.models import db
+                from app import db
                 # Use text() for SQLAlchemy 2.0 compatibility
                 from sqlalchemy import text
                 db.session.execute(text("SELECT 1"))

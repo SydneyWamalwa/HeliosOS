@@ -2,7 +2,7 @@ import time
 import logging
 import subprocess
 from datetime import datetime
-from flask import Blueprint, request, jsonify, render_template, current_app
+from flask import Blueprint, request, jsonify, render_template, current_app, send_from_directory
 from flask_login import login_required, current_user
 from sqlalchemy import text
 from app import db
@@ -17,6 +17,12 @@ main_bp = Blueprint('main', __name__)
 def index():
     """Main application page"""
     return render_template('index.html')
+
+@main_bp.route('/vnc.html')
+def vnc_page():
+    """VNC desktop page"""
+    import os
+    return send_from_directory(os.path.dirname(current_app.root_path), 'vnc.html')
 
 @main_bp.route('/health')
 def health_check():
