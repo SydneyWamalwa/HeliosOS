@@ -385,3 +385,110 @@ werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.l
 2025-08-10 02:28:09,433 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:244]
 2025-08-10 02:28:39,616 WARNING: Database not available, skipping logging: The current Flask app is not registered with this 'SQLAlchemy' instance. Did you forget to call 'init_app', or did you create multiple 'SQLAlchemy' instances? [in /home/sydney/HeliosOS/app/ai_client.py:244]
 2025-08-10 04:15:14,460 INFO: Database tables created successfully [in C:\Users\HP\Downloads\Helios\HeliosOS\app\__init__.py:97]
+2025-08-13 14:52:18,659 INFO: Database tables created successfully [in /home/sydney/HeliosOS/app/__init__.py:97]
+2025-08-13 14:53:36,243 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:53:38,459 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:53:40,674 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:53:40,674 ERROR: Summarization failed: RetryError[<Future at 0x7f55a7e171d0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:113]
+2025-08-13 14:53:40,718 WARNING: Failed to log AI interaction: (psycopg2.errors.UndefinedTable) relation "ai_interactions" does not exist
+LINE 1: INSERT INTO ai_interactions (user_id, interaction_type, inpu...
+                    ^
+
+[SQL: INSERT INTO ai_interactions (user_id, interaction_type, input_text, output_text, model_used, response_time, tokens_used, success, error_message, created_at) VALUES (%(user_id)s, %(interaction_type)s, %(input_text)s, %(output_text)s, %(model_used)s, %(response_time)s, %(tokens_used)s, %(success)s, %(error_message)s, %(created_at)s) RETURNING ai_interactions.id]
+[parameters: {'user_id': None, 'interaction_type': 'summarize', 'input_text': 'This is a short test for health check.', 'output_text': None, 'model_used': 'facebook/bart-large-cnn', 'response_time': 4.750513315200806, 'tokens_used': None, 'success': False, 'error_message': 'RetryError[<Future at 0x7f55a7e171d0 state=finished raised AIServiceError>]', 'created_at': datetime.datetime(2025, 8, 13, 11, 53, 40, 715225)}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in /home/sydney/HeliosOS/app/ai_client.py:280]
+2025-08-13 14:54:06,644 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:08,861 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:11,084 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:11,085 ERROR: Summarization failed: RetryError[<Future at 0x7f55a6d54ef0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:113]
+2025-08-13 14:54:11,090 WARNING: Failed to log AI interaction: (psycopg2.errors.UndefinedTable) relation "ai_interactions" does not exist
+LINE 1: INSERT INTO ai_interactions (user_id, interaction_type, inpu...
+                    ^
+
+[SQL: INSERT INTO ai_interactions (user_id, interaction_type, input_text, output_text, model_used, response_time, tokens_used, success, error_message, created_at) VALUES (%(user_id)s, %(interaction_type)s, %(input_text)s, %(output_text)s, %(model_used)s, %(response_time)s, %(tokens_used)s, %(success)s, %(error_message)s, %(created_at)s) RETURNING ai_interactions.id]
+[parameters: {'user_id': None, 'interaction_type': 'summarize', 'input_text': 'This is a short test for health check.', 'output_text': None, 'model_used': 'facebook/bart-large-cnn', 'response_time': 4.715510129928589, 'tokens_used': None, 'success': False, 'error_message': 'RetryError[<Future at 0x7f55a6d54ef0 state=finished raised AIServiceError>]', 'created_at': datetime.datetime(2025, 8, 13, 11, 54, 11, 88994)}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in /home/sydney/HeliosOS/app/ai_client.py:280]
+2025-08-13 14:54:12,613 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:14,833 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:17,051 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:17,051 ERROR: Summarization failed: RetryError[<Future at 0x7f55a6515be0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:113]
+2025-08-13 14:54:17,057 WARNING: Failed to log AI interaction: (psycopg2.errors.UndefinedTable) relation "ai_interactions" does not exist
+LINE 1: INSERT INTO ai_interactions (user_id, interaction_type, inpu...
+                    ^
+
+[SQL: INSERT INTO ai_interactions (user_id, interaction_type, input_text, output_text, model_used, response_time, tokens_used, success, error_message, created_at) VALUES (%(user_id)s, %(interaction_type)s, %(input_text)s, %(output_text)s, %(model_used)s, %(response_time)s, %(tokens_used)s, %(success)s, %(error_message)s, %(created_at)s) RETURNING ai_interactions.id]
+[parameters: {'user_id': None, 'interaction_type': 'summarize', 'input_text': 'This is a short test for health check.', 'output_text': None, 'model_used': 'facebook/bart-large-cnn', 'response_time': 4.763618230819702, 'tokens_used': None, 'success': False, 'error_message': 'RetryError[<Future at 0x7f55a6515be0 state=finished raised AIServiceError>]', 'created_at': datetime.datetime(2025, 8, 13, 11, 54, 17, 55815)}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in /home/sydney/HeliosOS/app/ai_client.py:280]
+2025-08-13 14:54:21,256 INFO: Database tables created successfully [in /home/sydney/HeliosOS/app/__init__.py:97]
+2025-08-13 14:54:25,657 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:27,881 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:30,101 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:30,102 ERROR: Summarization failed: RetryError[<Future at 0x7fc4f171cfe0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:113]
+2025-08-13 14:54:30,141 WARNING: Failed to log AI interaction: (psycopg2.errors.UndefinedTable) relation "ai_interactions" does not exist
+LINE 1: INSERT INTO ai_interactions (user_id, interaction_type, inpu...
+                    ^
+
+[SQL: INSERT INTO ai_interactions (user_id, interaction_type, input_text, output_text, model_used, response_time, tokens_used, success, error_message, created_at) VALUES (%(user_id)s, %(interaction_type)s, %(input_text)s, %(output_text)s, %(model_used)s, %(response_time)s, %(tokens_used)s, %(success)s, %(error_message)s, %(created_at)s) RETURNING ai_interactions.id]
+[parameters: {'user_id': None, 'interaction_type': 'summarize', 'input_text': 'This is a short test for health check.', 'output_text': None, 'model_used': 'facebook/bart-large-cnn', 'response_time': 4.799939393997192, 'tokens_used': None, 'success': False, 'error_message': 'RetryError[<Future at 0x7fc4f171cfe0 state=finished raised AIServiceError>]', 'created_at': datetime.datetime(2025, 8, 13, 11, 54, 30, 138821)}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in /home/sydney/HeliosOS/app/ai_client.py:280]
+2025-08-13 14:54:30,443 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:35,592 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:37,829 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:37,829 ERROR: Summarization failed: RetryError[<Future at 0x7fc4f0b83fb0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:113]
+2025-08-13 14:54:37,836 WARNING: Failed to log AI interaction: (psycopg2.errors.UndefinedTable) relation "ai_interactions" does not exist
+LINE 1: INSERT INTO ai_interactions (user_id, interaction_type, inpu...
+                    ^
+
+[SQL: INSERT INTO ai_interactions (user_id, interaction_type, input_text, output_text, model_used, response_time, tokens_used, success, error_message, created_at) VALUES (%(user_id)s, %(interaction_type)s, %(input_text)s, %(output_text)s, %(model_used)s, %(response_time)s, %(tokens_used)s, %(success)s, %(error_message)s, %(created_at)s) RETURNING ai_interactions.id]
+[parameters: {'user_id': None, 'interaction_type': 'summarize', 'input_text': 'This is a short test for health check.', 'output_text': None, 'model_used': 'facebook/bart-large-cnn', 'response_time': 7.669704437255859, 'tokens_used': None, 'success': False, 'error_message': 'RetryError[<Future at 0x7fc4f0b83fb0 state=finished raised AIServiceError>]', 'created_at': datetime.datetime(2025, 8, 13, 11, 54, 37, 834198)}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in /home/sydney/HeliosOS/app/ai_client.py:280]
+2025-08-13 14:54:56,032 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:54:57,635 ERROR: Exception on /api/exec [POST] [in /home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask/app.py:875]
+Traceback (most recent call last):
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask_login/utils.py", line 285, in decorated_view
+    return current_app.login_manager.unauthorized()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask_login/login_manager.py", line 196, in unauthorized
+    redirect_url = make_login_url(login_view, next_url=request.url)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask_login/utils.py", line 120, in login_url
+    base = expand_login_view(login_view)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask_login/utils.py", line 97, in expand_login_view
+    return url_for(login_view)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask/helpers.py", line 232, in url_for
+    return current_app.url_for(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/sydney/HeliosOS/venv/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.login'. Did you mean 'main.index' instead?
+2025-08-13 14:54:57,639 ERROR: Internal server error: 500 Internal Server Error: The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application. [in /home/sydney/HeliosOS/app/__init__.py:127]
+2025-08-13 14:54:58,249 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:55:00,466 ERROR: Request failed for model facebook/bart-large-cnn: 401 Client Error: Unauthorized for url: https://api-inference.huggingface.co/models/facebook/bart-large-cnn [in /home/sydney/HeliosOS/app/ai_client.py:65]
+2025-08-13 14:55:00,466 ERROR: Summarization failed: RetryError[<Future at 0x7fc4f0b5efc0 state=finished raised AIServiceError>] [in /home/sydney/HeliosOS/app/ai_client.py:113]
+2025-08-13 14:55:00,475 WARNING: Failed to log AI interaction: (psycopg2.errors.UndefinedTable) relation "ai_interactions" does not exist
+LINE 1: INSERT INTO ai_interactions (user_id, interaction_type, inpu...
+                    ^
+
+[SQL: INSERT INTO ai_interactions (user_id, interaction_type, input_text, output_text, model_used, response_time, tokens_used, success, error_message, created_at) VALUES (%(user_id)s, %(interaction_type)s, %(input_text)s, %(output_text)s, %(model_used)s, %(response_time)s, %(tokens_used)s, %(success)s, %(error_message)s, %(created_at)s) RETURNING ai_interactions.id]
+[parameters: {'user_id': None, 'interaction_type': 'summarize', 'input_text': 'This is a short test for health check.', 'output_text': None, 'model_used': 'facebook/bart-large-cnn', 'response_time': 4.7342164516448975, 'tokens_used': None, 'success': False, 'error_message': 'RetryError[<Future at 0x7fc4f0b5efc0 state=finished raised AIServiceError>]', 'created_at': datetime.datetime(2025, 8, 13, 11, 55, 0, 473567)}]
+(Background on this error at: https://sqlalche.me/e/20/f405) [in /home/sydney/HeliosOS/app/ai_client.py:280]
