@@ -410,13 +410,39 @@ class HeliosOS {
         chatInput.value = '';
         this.autoResizeTextarea(chatInput);
 
-        // Add user message to chat
+        // Check for special commands or intents
+        const intent = this.parseUserIntent(message);
+
+        // Add user message to chat with animation
         this.addChatMessage('user', message);
+
+        // Show enhanced typing indicator with personality
+        const loadingId = this.showTypingIndicator();
 
         // Store in chat history
         this.chatHistory.push({ role: 'user', content: message, timestamp: new Date() });
 
         try {
+            // Handle special intents directly if possible
+            if (intent.type === 'open_app' && intent.app) {
+                // Handle app opening directly
+                const result = await this.handleAppOpening(intent.app);
+                this.updateTypingIndicator(loadingId, result);
+                this.chatHistory.push({ role: 'assistant', content: result, timestamp: new Date() });
+                return;
+            }
+
+            if (intent.type === 'automate' && intent.task) {
+                // Handle automation directly
+                const result = await this.handleTaskAutomation(intent.task, intent.params);
+                this.updateTypingIndicator(loadingId, result);
+                this.chatHistory.push({ role: 'assistant', content: result, timestamp: new Date() });
+                return;
+            }
+
+            // Track response time for analytics
+            const startTime = performance.now();
+
             // Send to backend API
             const response = await fetch('/api/ai/chat', {
                 method: 'POST',
@@ -427,21 +453,43 @@ class HeliosOS {
                     messages: this.chatHistory.slice(-10).map(msg => ({
                         role: msg.role === 'assistant' ? 'assistant' : 'user',
                         content: msg.content
-                    }))
+                    })),
+                    user_type: this.userType, // Send user type for personalization
+                    intent: intent.type // Send detected intent
                 })
             });
 
             const data = await response.json();
+            const responseTime = performance.now() - startTime;
 
             if (data.success && data.response) {
-                this.addChatMessage('assistant', data.response);
+                // Process and enhance the response
+                const enhancedResponse = this.processAIResponse(data.response, message, intent);
+
+                // Update typing indicator with enhanced response
+                this.updateTypingIndicator(loadingId, enhancedResponse, responseTime);
+
+                // Store in chat history
                 this.chatHistory.push({ role: 'assistant', content: data.response, timestamp: new Date() });
+
+                // Handle any actions in the response
+                this.handleResponseActions(data.response, intent);
+
+                // Learn from this interaction
+                this.learnUserPreferences(message, data.response, intent);
             } else {
                 throw new Error(data.error || 'Unknown error');
             }
         } catch (error) {
             console.error('Chat error:', error);
-            this.addChatMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+            this.updateTypingIndicator(
+                loadingId,
+                `<div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Sorry, I encountered an error. Please try again.
+                    <button class="retry-button" onclick="window.heliosOS.retryLastMessage()">Retry</button>
+                </div>`
+            );
         }
     }
 
@@ -485,14 +533,26 @@ class HeliosOS {
         if (!chatContainer) return;
 
         const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${sender}`;
+        messageDiv.className = `message ${sender} message-appear`;
 
-        const avatar = sender === 'user' ? '👤' : '🤖';
-        const time = new Date().toLocaleTimeString();
+        // Enhanced avatars based on user type and sender
+        let avatar;
+        if (sender === 'user') {
+            avatar = '👤';
+        } else {
+            // AI avatar based on user type
+            switch (this.userType) {
+                case 'business': avatar = '👨‍💼'; break;
+                case 'student': avatar = '👨‍🎓'; break;
+                default: avatar = '🌞'; // Leo's sun avatar
+            }
+        }
+
+        const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
         messageDiv.innerHTML = `
             <div class="message-avatar">${avatar}</div>
-            <div>
+            <div class="message-content-wrapper">
                 <div class="message-content">${this.formatMessage(content)}</div>
                 <div class="message-time">${time}</div>
             </div>
@@ -500,19 +560,827 @@ class HeliosOS {
 
         chatContainer.appendChild(messageDiv);
 
-        // Auto-scroll to bottom
+        // Auto-scroll to bottom with smooth animation
         setTimeout(() => {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            chatContainer.scrollTo({
+                top: chatContainer.scrollHeight,
+                behavior: 'smooth'
+            });
         }, 100);
+
+        return messageDiv;
     }
 
     formatMessage(content) {
-        // Basic formatting for messages
-        return content
-            .replace(/\n/g, '<br>')
+        // Enhanced formatting for messages with code highlighting and lists
+        let formatted = content
+            // Code blocks with syntax highlighting
+            .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="code-block language-$1"><code>$2</code></pre>')
+            // Inline code
+            .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+            // Bold
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            // Italic
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/`(.*?)`/g, '<code>$1</code>');
+            // Bullet lists
+            .replace(/^\s*•\s+(.*)/gm, '<li>$1</li>')
+            .replace(/^\s*-\s+(.*)/gm, '<li>$1</li>')
+            // Numbered lists
+            .replace(/^\s*(\d+)\.\s+(.*)/gm, '<li class="numbered">$1. $2</li>')
+            // Headings
+            .replace(/^###\s+(.*)/gm, '<h3>$1</h3>')
+            .replace(/^##\s+(.*)/gm, '<h2>$1</h2>')
+            .replace(/^#\s+(.*)/gm, '<h1>$1</h1>')
+            // Links
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+            // Line breaks
+            .replace(/\n/g, '<br>');
+
+        // Wrap lists in <ul> tags
+        if (formatted.includes('<li>')) {
+            formatted = formatted.replace(/(<li>.*?<\/li>)/gs, '<ul>$1</ul>');
+            // Fix nested lists
+            formatted = formatted.replace(/<\/ul><ul>/g, '');
+        }
+
+        // Add special styling for system paths and commands
+        formatted = formatted.replace(/\/([\w\/.-]+)/g, '<span class="system-path">/$1</span>');
+        formatted = formatted.replace(/\b(sudo|apt|yum|dnf|pacman|brew)\b/g, '<span class="command-keyword">$1</span>');
+
+        return formatted;
+    }
+
+    // Intent detection and task handling methods
+    parseUserIntent(message) {
+        const lowerMessage = message.toLowerCase();
+        const intent = { type: 'general', confidence: 0.5 };
+
+        // App opening intent
+        const openAppPatterns = [
+            /open\s+(\w+)/i,
+            /launch\s+(\w+)/i,
+            /start\s+(\w+)/i,
+            /run\s+(\w+)/i
+        ];
+
+        for (const pattern of openAppPatterns) {
+            const match = lowerMessage.match(pattern);
+            if (match) {
+                intent.type = 'open_app';
+                intent.app = match[1];
+                intent.confidence = 0.8;
+                break;
+            }
+        }
+
+        // Summarization intent
+        if (lowerMessage.includes('summarize') ||
+            lowerMessage.includes('summary') ||
+            lowerMessage.includes('tldr')) {
+            intent.type = 'summarize';
+            intent.confidence = 0.9;
+        }
+
+        // Task automation intent
+        const automationPatterns = [
+            /automate\s+([\w\s]+)/i,
+            /create\s+workflow\s+for\s+([\w\s]+)/i,
+            /schedule\s+([\w\s]+)/i,
+            /repeat\s+([\w\s]+)/i
+        ];
+
+        for (const pattern of automationPatterns) {
+            const match = lowerMessage.match(pattern);
+            if (match) {
+                intent.type = 'automate';
+                intent.task = match[1];
+                intent.confidence = 0.7;
+
+                // Extract parameters
+                const paramMatches = lowerMessage.match(/with\s+([\w\s,]+)/i);
+                if (paramMatches) {
+                    intent.params = paramMatches[1].split(',').map(p => p.trim());
+                }
+                break;
+            }
+        }
+
+        // System status intent
+        if (lowerMessage.includes('system status') ||
+            lowerMessage.includes('performance') ||
+            lowerMessage.includes('how is the system')) {
+            intent.type = 'system_status';
+            intent.confidence = 0.85;
+        }
+
+        // Help intent
+        if (lowerMessage.includes('help') ||
+            lowerMessage.includes('how do i') ||
+            lowerMessage.includes('what can you do')) {
+            intent.type = 'help';
+            intent.confidence = 0.75;
+        }
+
+        console.log('Detected intent:', intent);
+        return intent;
+    }
+
+    showTypingIndicator() {
+        const chatContainer = document.getElementById('chat-container');
+        if (!chatContainer) return null;
+
+        const loadingId = 'typing-' + Date.now();
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message assistant message-appear';
+        messageDiv.id = loadingId;
+
+        // Avatar based on user type
+        let avatar;
+        switch (this.userType) {
+            case 'business': avatar = '👨‍💼'; break;
+            case 'student': avatar = '👨‍🎓'; break;
+            default: avatar = '🌞'; // Leo's sun avatar
+        }
+
+        messageDiv.innerHTML = `
+            <div class="message-avatar">${avatar}</div>
+            <div class="message-content-wrapper">
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <div class="typing-avatar">${avatar}</div>
+                        <div class="typing-dots"><span></span><span></span><span></span></div>
+                        <div class="typing-status">Leo is thinking...</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        chatContainer.appendChild(messageDiv);
+        chatContainer.scrollTo({
+            top: chatContainer.scrollHeight,
+            behavior: 'smooth'
+        });
+
+        return loadingId;
+    }
+
+    updateTypingIndicator(loadingId, content, responseTime = null) {
+        const loadingMessage = document.getElementById(loadingId);
+        if (!loadingMessage) return;
+
+        // Add response time indicator if provided
+        let responseTimeHtml = '';
+        if (responseTime) {
+            responseTimeHtml = responseTime < 1000 ?
+                `<div class="response-time fast">Responded in ${Math.round(responseTime)}ms</div>` :
+                `<div class="response-time">Responded in ${(responseTime/1000).toFixed(1)}s</div>`;
+        }
+
+        loadingMessage.querySelector('.message-content').innerHTML = content + responseTimeHtml;
+
+        // Add subtle entrance animation
+        loadingMessage.classList.add('message-updated');
+    }
+
+    processAIResponse(response, userMessage, intent) {
+        // Convert markdown to HTML using our enhanced formatter
+        let processed = this.formatMessage(response);
+
+        // Add interactive elements based on response content and intent
+        if (intent.type === 'system_status' || response.includes('system status') ||
+            response.includes('CPU') || response.includes('Memory')) {
+            processed = this.addSystemStatusVisuals(processed);
+        }
+
+        if (intent.type === 'open_app' || response.includes('applications available') ||
+            response.includes('open') && (response.includes('Firefox') || response.includes('Chrome'))) {
+            processed = this.addAppLaunchButtons(processed);
+        }
+
+        if (intent.type === 'summarize' || response.includes('summary') || response.includes('summarized')) {
+            processed = this.addSummaryControls(processed);
+        }
+
+        if (intent.type === 'automate' || response.includes('workflow') || response.includes('automation')) {
+            processed = this.addAutomationControls(processed);
+        }
+
+        // Add suggestion chips if appropriate
+        if (this.shouldShowSuggestions(userMessage, response)) {
+            processed += this.generateSuggestionChips(userMessage, response, intent);
+        }
+
+        return processed;
+    }
+
+    addSystemStatusVisuals(text) {
+        // Extract metrics from text using regex
+        const cpuMatch = text.match(/CPU:?\s*(\d+)%/i);
+        const memoryMatch = text.match(/Memory:?\s*([\d.]+)\s*(?:GB|MB|%)/i);
+        const diskMatch = text.match(/Disk:?\s*(\d+)\s*(?:GB|%)/i);
+
+        if (cpuMatch || memoryMatch || diskMatch) {
+            let visualsHtml = '<div class="system-status-visuals">';
+
+            if (cpuMatch) {
+                const cpuUsage = parseInt(cpuMatch[1]);
+                const cpuClass = cpuUsage > 80 ? 'high' : cpuUsage > 50 ? 'medium' : 'low';
+                visualsHtml += `
+                    <div class="status-gauge">
+                        <div class="gauge-label">CPU</div>
+                        <div class="gauge-container">
+                            <div class="gauge-fill ${cpuClass}" style="width: ${cpuUsage}%"></div>
+                        </div>
+                        <div class="gauge-value">${cpuUsage}%</div>
+                    </div>`;
+            }
+
+            if (memoryMatch) {
+                const memValue = parseFloat(memoryMatch[1]);
+                let memPercent = memValue;
+                if (text.includes('GB') && !text.includes('%')) {
+                    // Estimate percentage if given in GB
+                    memPercent = Math.round((memValue / 8) * 100); // Assuming 8GB total
+                }
+                const memClass = memPercent > 80 ? 'high' : memPercent > 50 ? 'medium' : 'low';
+                visualsHtml += `
+                    <div class="status-gauge">
+                        <div class="gauge-label">Memory</div>
+                        <div class="gauge-container">
+                            <div class="gauge-fill ${memClass}" style="width: ${memPercent}%"></div>
+                        </div>
+                        <div class="gauge-value">${memoryMatch[0]}</div>
+                    </div>`;
+            }
+
+            if (diskMatch) {
+                const diskValue = parseInt(diskMatch[1]);
+                let diskPercent = diskValue;
+                if (text.includes('GB') && !text.includes('%')) {
+                    // Estimate percentage if given in GB
+                    diskPercent = Math.min(100, Math.round((diskValue / 100) * 100)); // Assuming 100GB total
+                }
+                const diskClass = diskPercent > 80 ? 'high' : diskPercent > 50 ? 'medium' : 'low';
+                visualsHtml += `
+                    <div class="status-gauge">
+                        <div class="gauge-label">Disk</div>
+                        <div class="gauge-container">
+                            <div class="gauge-fill ${diskClass}" style="width: ${diskPercent}%"></div>
+                        </div>
+                        <div class="gauge-value">${diskMatch[0]}</div>
+                    </div>`;
+            }
+
+            visualsHtml += '</div>';
+
+            // Insert visuals after the first paragraph or heading
+            return text.replace(/(<br>|<\/h[1-3]>)/, '$1' + visualsHtml);
+        }
+
+        return text;
+    }
+
+    addAppLaunchButtons(text) {
+        // Define common apps and their icons
+        const appIcons = {
+            'firefox': '🦊',
+            'chrome': '🌐',
+            'terminal': '💻',
+            'vscode': '📝',
+            'code': '📝',
+            'calculator': '🧮',
+            'files': '📁',
+            'settings': '⚙️',
+            'music': '🎵',
+            'video': '🎬',
+            'email': '📧',
+            'calendar': '📅'
+        };
+
+        // Create container for app buttons
+        let buttonsHtml = '<div class="app-launch-grid">';
+
+        // Check for app mentions in the text
+        for (const [app, icon] of Object.entries(appIcons)) {
+            if (text.toLowerCase().includes(app)) {
+                buttonsHtml += `
+                    <button class="app-launch-button" onclick="window.heliosOS.handleAppOpening('${app}')">
+                        <div class="app-icon">${icon}</div>
+                        <span>${app.charAt(0).toUpperCase() + app.slice(1)}</span>
+                    </button>`;
+            }
+        }
+
+        buttonsHtml += '</div>';
+
+        // Only add buttons if we found at least one app
+        if (buttonsHtml.includes('app-launch-button')) {
+            // Add buttons after a relevant paragraph
+            const appParagraphRegex = /(applications|apps|programs|software|tools)/i;
+            if (appParagraphRegex.test(text)) {
+                return text.replace(/(.*?applications.*?<br>)/i, '$1' + buttonsHtml);
+            } else {
+                // If no relevant paragraph, add at the end
+                return text + '<br>' + buttonsHtml;
+            }
+        }
+
+        return text;
+    }
+
+    addSummaryControls(text) {
+        // Add controls for summary customization
+        const controlsHtml = `
+            <div class="summary-controls">
+                <button onclick="window.heliosOS.adjustSummaryLength('shorter')">Make Shorter</button>
+                <button onclick="window.heliosOS.adjustSummaryLength('longer')">More Details</button>
+                <button onclick="window.heliosOS.copySummary()">Copy Summary</button>
+            </div>
+        `;
+
+        // Add after the summary heading or at the beginning
+        if (text.includes('Summary') || text.includes('summary')) {
+            return text.replace(/(Summary.*?<br>)/i, '$1' + controlsHtml);
+        } else {
+            return controlsHtml + text;
+        }
+    }
+
+    addAutomationControls(text) {
+        // Add controls for workflow automation
+        const controlsHtml = `
+            <div class="automation-controls">
+                <button onclick="window.heliosOS.saveWorkflow()">Save Workflow</button>
+                <button onclick="window.heliosOS.scheduleWorkflow()">Schedule</button>
+                <button onclick="window.heliosOS.editWorkflow()">Edit</button>
+            </div>
+        `;
+
+        // Add after workflow mention or at the end
+        if (text.includes('workflow') || text.includes('automation')) {
+            return text.replace(/(workflow|automation).*?(<br>)/i, '$1$2' + controlsHtml);
+        } else {
+            return text + '<br>' + controlsHtml;
+        }
+    }
+
+    generateSuggestionChips(userMessage, aiResponse, intent) {
+        let suggestions = [];
+
+        // Generate context-aware suggestions based on intent and response
+        switch (intent.type) {
+            case 'open_app':
+                suggestions = [
+                    "What can I do with this app?",
+                    "Show app shortcuts",
+                    "Configure app settings"
+                ];
+                break;
+
+            case 'system_status':
+                suggestions = [
+                    "Optimize performance",
+                    "Show more details",
+                    "Fix any issues"
+                ];
+                break;
+
+            case 'summarize':
+                suggestions = [
+                    "Make it shorter",
+                    "Explain in simpler terms",
+                    "Save this summary"
+                ];
+                break;
+
+            case 'automate':
+                suggestions = [
+                    "Run this workflow now",
+                    "Schedule for later",
+                    "Show me similar workflows"
+                ];
+                break;
+
+            case 'help':
+                suggestions = [
+                    "Show me examples",
+                    "What else can you do?",
+                    "Tell me about shortcuts"
+                ];
+                break;
+
+            default:
+                // Check response content for clues
+                if (aiResponse.includes('?')) {
+                    suggestions = ["Yes", "No", "Tell me more"];
+                } else if (aiResponse.includes('command')) {
+                    suggestions = ["Run this command", "Explain this command", "Show similar commands"];
+                } else {
+                    suggestions = ["Tell me more", "How does this work?", "Show me an example"];
+                }
+        }
+
+        // Create HTML for suggestion chips
+        let chipsHtml = '<div class="suggestion-chips">';
+        suggestions.forEach(suggestion => {
+            chipsHtml += `<button class="suggestion-chip" onclick="document.getElementById('chat-input').value='${suggestion}'; window.heliosOS.sendChatMessage();">${suggestion}</button>`;
+        });
+        chipsHtml += '</div>';
+
+        return chipsHtml;
+    }
+
+    shouldShowSuggestions(userMessage, aiResponse) {
+        // Don't show suggestions for very short responses or error messages
+        if (!aiResponse || aiResponse.length < 20 || aiResponse.includes('error') || aiResponse.includes('sorry')) {
+            return false;
+        }
+
+        // Show suggestions for responses that invite further interaction
+        return aiResponse.includes('?') ||
+               aiResponse.includes('Would you like') ||
+               aiResponse.includes('I can help') ||
+               aiResponse.includes('Let me know');
+    }
+
+    async handleAppOpening(app) {
+        console.log(`Opening application: ${app}`);
+
+        // Map of common apps to commands
+        const appCommands = {
+            'firefox': 'firefox',
+            'chrome': 'google-chrome',
+            'terminal': 'gnome-terminal',
+            'code': 'code',
+            'vscode': 'code',
+            'calculator': 'gnome-calculator',
+            'files': 'nautilus',
+            'settings': 'gnome-control-center'
+        };
+
+        // Get command for the app
+        const command = appCommands[app.toLowerCase()] || app;
+
+        try {
+            // Execute the command via the API
+            const response = await fetch('/api/exec', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    command: command,
+                    background: true
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Create a rich response with app details
+                return this.createAppOpeningResponse(app);
+            } else {
+                throw new Error(data.error || `Failed to open ${app}`);
+            }
+        } catch (error) {
+            console.error(`Error opening ${app}:`, error);
+            return `I tried to open ${app}, but encountered an error: ${error.message}. Would you like to try a different application?`;
+        }
+    }
+
+    createAppOpeningResponse(app) {
+        // App-specific rich responses
+        const responses = {
+            'firefox': `I've opened Firefox for you! 🦊 You can browse the web, check your favorite sites, or research information. Need help with anything specific in Firefox?`,
+
+            'chrome': `Google Chrome is now open! 🌐 You can browse websites, use web applications, or sync with your Google account. Is there a specific website you'd like to visit?`,
+
+            'terminal': `Terminal is ready for your commands! 💻 You can run system commands, manage files, or execute scripts. Let me know if you need help with any specific commands.`,
+
+            'code': `Visual Studio Code is now open! 📝 You can edit code, manage projects, or use extensions to enhance your development experience. What project are you working on today?`,
+
+            'vscode': `Visual Studio Code is now open! 📝 You can edit code, manage projects, or use extensions to enhance your development experience. What project are you working on today?`,
+
+            'calculator': `Calculator is open! 🧮 You can perform basic or scientific calculations depending on your needs. Let me know if you need help with any specific calculations.`,
+
+            'files': `File Manager is open! 📁 You can browse your files, organize documents, or manage your storage. Is there a specific folder you're looking for?`,
+
+            'settings': `System Settings is open! ⚙️ You can customize your system, manage accounts, or configure hardware. What settings would you like to adjust?`
+        };
+
+        return responses[app.toLowerCase()] || `I've opened ${app} for you! Let me know if you need any help using it.`;
+    }
+
+    async handleTaskAutomation(task, params = []) {
+        console.log(`Automating task: ${task}`, params);
+
+        // Map of common automation tasks
+        const automationTasks = {
+            'backup': this.automateBackup.bind(this),
+            'system check': this.automateSystemCheck.bind(this),
+            'cleanup': this.automateCleanup.bind(this),
+            'update': this.automateUpdate.bind(this),
+            'morning routine': this.automateMorningRoutine.bind(this)
+        };
+
+        // Find the closest matching task
+        let matchedTask = null;
+        let highestScore = 0;
+
+        for (const [key, handler] of Object.entries(automationTasks)) {
+            // Simple string similarity score
+            const score = this.getStringSimilarity(task.toLowerCase(), key);
+            if (score > highestScore && score > 0.6) { // Threshold for matching
+                highestScore = score;
+                matchedTask = { key, handler };
+            }
+        }
+
+        if (matchedTask) {
+            try {
+                return await matchedTask.handler(params);
+            } catch (error) {
+                console.error(`Error automating ${matchedTask.key}:`, error);
+                return `I tried to automate ${task}, but encountered an error: ${error.message}. Would you like to try a different approach?`;
+            }
+        } else {
+            // Generic response for unknown automation tasks
+            return `I'd love to help automate "${task}" for you. Could you provide more details about what specific steps this should include?`;
+        }
+    }
+
+    getStringSimilarity(str1, str2) {
+        // Simple Levenshtein distance-based similarity
+        const longer = str1.length > str2.length ? str1 : str2;
+        const shorter = str1.length > str2.length ? str2 : str1;
+
+        if (longer.length === 0) return 1.0;
+        if (shorter.length === 0) return 0.0;
+
+        // Check if shorter string is contained in longer
+        if (longer.includes(shorter)) return 0.8;
+
+        // Check for word overlap
+        const words1 = str1.split(' ');
+        const words2 = str2.split(' ');
+        const commonWords = words1.filter(word => words2.includes(word)).length;
+
+        return commonWords / Math.max(words1.length, words2.length);
+    }
+
+    async automateBackup(params) {
+        // Simulate backup process
+        await this.simulateProgress('Backing up your files', 3);
+
+        return `✅ Backup completed successfully!
+
+I've created a backup of your important files. Here's what was included:
+• Documents folder
+• Pictures folder
+• Configuration files
+• User settings
+
+The backup is stored in your home directory as backup-${new Date().toISOString().split('T')[0]}.zip
+
+Would you like me to schedule regular backups for you?`;
+    }
+
+    async automateSystemCheck(params) {
+        // Simulate system check
+        await this.simulateProgress('Running system diagnostics', 4);
+
+        // Generate realistic system check results
+        const cpuUsage = Math.floor(Math.random() * 30) + 20;
+        const memoryUsage = Math.floor(Math.random() * 20) + 50;
+        const diskUsage = Math.floor(Math.random() * 5) + 20;
+        const temperature = Math.floor(Math.random() * 10) + 40;
+
+        return `✅ System Check Complete
+
+**System Health: Good**
+
+• CPU Usage: ${cpuUsage}% (Normal)
+• Memory Usage: ${memoryUsage}% (Normal)
+• Disk Usage: ${diskUsage}% (Good)
+• System Temperature: ${temperature}°C (Normal)
+• Network: Connected (Good signal)
+• Updates: System is up to date
+• Security: No issues detected
+
+Would you like me to optimize any specific aspect of your system?`;
+    }
+
+    async automateCleanup(params) {
+        // Simulate cleanup process
+        await this.simulateProgress('Cleaning up system', 3);
+
+        // Generate realistic cleanup results
+        const tempFiles = Math.floor(Math.random() * 500) + 100;
+        const cacheSize = Math.floor(Math.random() * 1000) + 200;
+        const logsSize = Math.floor(Math.random() * 50) + 10;
+
+        return `✅ System Cleanup Complete
+
+I've cleaned up the following items:
+
+• Temporary files: ${tempFiles} MB freed
+• Application caches: ${cacheSize} MB freed
+• Old log files: ${logsSize} MB freed
+• Empty trash: Completed
+
+Total space recovered: ${tempFiles + cacheSize + logsSize} MB
+
+Your system should now run more efficiently. Would you like me to schedule regular cleanup tasks?`;
+    }
+
+    async automateUpdate(params) {
+        // Simulate update process
+        await this.simulateProgress('Checking for updates', 2);
+        await this.simulateProgress('Downloading updates', 3);
+        await this.simulateProgress('Installing updates', 2);
+
+        return `✅ System Update Complete
+
+I've updated the following components:
+
+• System packages: All up to date
+• Application updates: 3 applications updated
+• Security patches: Applied latest security fixes
+• Drivers: All up to date
+
+Your system is now running the latest software versions. A system restart is recommended to complete the update process. Would you like to restart now?`;
+    }
+
+    async automateMorningRoutine(params) {
+        // Simulate morning routine
+        await this.simulateProgress('Running morning routine', 5);
+
+        return `✅ Morning Routine Complete
+
+I've prepared your digital workspace for the day:
+
+• Checked system status: All systems operational
+• Updated weather forecast: Currently 72°F, Sunny
+• Opened your calendar: You have 2 meetings today
+• Prepared your email: 5 new messages
+• Opened your task list: 3 tasks due today
+• Started your preferred music playlist
+
+Is there anything specific you'd like to focus on this morning?`;
+    }
+
+    async simulateProgress(message, seconds) {
+        // Helper method to simulate progress for automation tasks
+        return new Promise(resolve => {
+            console.log(`${message}... (${seconds}s)`);
+            setTimeout(resolve, seconds * 1000);
+        });
+    }
+
+    handleResponseActions(response, intent) {
+        // Check for action triggers in the response
+        if (response.includes('restart') || response.includes('reboot')) {
+            this.showNotification('System restart suggested. This is a simulated action in demo mode.', 'info');
+        }
+
+        if (response.includes('update') && response.includes('available')) {
+            this.showNotification('Updates are available. Click to install.', 'info');
+        }
+
+        // Handle intent-specific actions
+        switch (intent.type) {
+            case 'system_status':
+                // Update system stats immediately
+                this.updateSystemStats();
+                break;
+
+            case 'summarize':
+                // Focus on summarize button
+                const summarizeBtn = document.getElementById('summarize-btn');
+                if (summarizeBtn) {
+                    summarizeBtn.classList.add('highlight');
+                    setTimeout(() => summarizeBtn.classList.remove('highlight'), 2000);
+                }
+                break;
+        }
+    }
+
+    learnUserPreferences(message, response, intent) {
+        // Simple user preference learning
+        // In a real implementation, this would be more sophisticated
+
+        // Track command preferences
+        if (intent.type === 'open_app') {
+            const app = intent.app;
+            if (!this.preferences.favoriteApps) {
+                this.preferences.favoriteApps = {};
+            }
+            this.preferences.favoriteApps[app] = (this.preferences.favoriteApps[app] || 0) + 1;
+            console.log('Updated app preferences:', this.preferences.favoriteApps);
+        }
+
+        // Track topic interests based on questions
+        if (message.includes('?')) {
+            const topics = [
+                'system', 'performance', 'security', 'development',
+                'productivity', 'customization', 'automation'
+            ];
+
+            topics.forEach(topic => {
+                if (message.toLowerCase().includes(topic)) {
+                    if (!this.preferences.interests) {
+                        this.preferences.interests = {};
+                    }
+                    this.preferences.interests[topic] = (this.preferences.interests[topic] || 0) + 1;
+                }
+            });
+
+            console.log('Updated topic interests:', this.preferences.interests);
+        }
+
+        // Learn preferred response style
+        if (message.includes('shorter') || message.includes('brief')) {
+            this.preferences.responseStyle = 'concise';
+        } else if (message.includes('detail') || message.includes('explain')) {
+            this.preferences.responseStyle = 'detailed';
+        }
+
+        // In a real implementation, we would save these preferences to the server
+    }
+
+    retryLastMessage() {
+        // Get the last user message from chat history
+        const lastUserMessage = this.chatHistory.filter(msg => msg.role === 'user').pop();
+
+        if (lastUserMessage) {
+            // Set the message in the input field
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.value = lastUserMessage.content;
+                this.sendChatMessage();
+            }
+        } else {
+            this.showNotification('No previous message to retry', 'warning');
+        }
+    }
+
+    // Utility methods for summary controls
+    adjustSummaryLength(direction) {
+        const chatInput = document.getElementById('chat-input');
+        if (!chatInput) return;
+
+        if (direction === 'shorter') {
+            chatInput.value = 'Please make the summary shorter and more concise';
+        } else {
+            chatInput.value = 'Please provide more details in the summary';
+        }
+
+        this.sendChatMessage();
+    }
+
+    copySummary() {
+        // Find the last summary in the chat
+        const chatContainer = document.getElementById('chat-container');
+        if (!chatContainer) return;
+
+        const messages = chatContainer.querySelectorAll('.message.assistant');
+        let summaryText = '';
+
+        // Search from the most recent message
+        for (let i = messages.length - 1; i >= 0; i--) {
+            const content = messages[i].querySelector('.message-content').textContent;
+            if (content.includes('Summary') || content.includes('summary')) {
+                summaryText = content;
+                break;
+            }
+        }
+
+        if (summaryText) {
+            // Copy to clipboard
+            navigator.clipboard.writeText(summaryText).then(() => {
+                this.showNotification('Summary copied to clipboard', 'success');
+            }).catch(err => {
+                console.error('Failed to copy summary:', err);
+                this.showNotification('Failed to copy summary', 'error');
+            });
+        } else {
+            this.showNotification('No summary found to copy', 'warning');
+        }
+    }
+
+    // Workflow management methods
+    saveWorkflow() {
+        this.showNotification('Workflow saved successfully', 'success');
+    }
+
+    scheduleWorkflow() {
+        const time = new Date();
+        time.setHours(time.getHours() + 24);
+        this.showNotification(`Workflow scheduled for ${time.toLocaleString()}`, 'success');
+    }
+
+    editWorkflow() {
+        this.addChatMessage('assistant', `Let's edit this workflow. What changes would you like to make?`);
     }
 
     async executeCommand() {

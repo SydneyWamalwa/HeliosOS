@@ -201,6 +201,7 @@
         </div>
 
         <div class="login-footer">
+            <p>Don't have an account? <a href="/signup">Sign Up</a></p>
             <p>HeliosOS v1.0</p>
         </div>
     </div>
@@ -214,7 +215,7 @@
             const errorMessage = document.getElementById('error-message');
 
             try {
-                const response = await fetch('/auth/login', {
+                const response = await fetch('/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

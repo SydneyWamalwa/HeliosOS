@@ -1,12 +1,12 @@
 from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy import Index
-from werkzeug.security import generate_password_hash, check_password_hash
+import bcrypt
 from datetime import datetime
 
-db = SQLAlchemy()
+# Import db from extensions to avoid circular imports
+from app.extensions import db
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -29,12 +29,16 @@ class User(UserMixin, db.Model):
                              cascade='all, delete-orphan')
 
     def set_password(self, password):
-        """Set password hash"""
-        self.password_hash = generate_password_hash(password)
+        """Set password hash using bcrypt"""
+        salt = bcrypt.gensalt(rounds=13)
+        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
     def check_password(self, password):
-        """Check password against hash"""
-        return check_password_hash(self.password_hash, password)
+        """Check password against hash using bcrypt"""
+        try:
+            return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+        except Exception:
+            return False
 
     def __repr__(self):
         return f'<User {self.username}>'

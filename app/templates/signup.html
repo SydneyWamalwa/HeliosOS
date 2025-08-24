@@ -188,13 +188,26 @@
                 <input type="password" id="confirm_password" name="confirm_password" class="form-input" required>
             </div>
 
+            <div class="form-group">
+                <label for="user_role" class="form-label">User Role *</label>
+                <select id="user_role" name="user_role" class="form-input" required>
+                    <option value="casual">Casual User</option>
+                    <option value="business">Business User</option>
+                    <option value="student">Student</option>
+                    <option value="developer">Developer</option>
+                </select>
+                <div class="password-requirements" style="margin-top: 5px;">
+                    Select the role that best describes your usage
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-user-plus"></i> Create Account
             </button>
         </form>
 
         <div class="signup-footer">
-            <p>Already have an account? <a href="/auth/login">Sign In</a></p>
+            <p>Already have an account? <a href="/login">Sign In</a></p>
             <p>HeliosOS v1.0</p>
         </div>
     </div>
@@ -228,13 +241,15 @@
                 return;
             }
 
+            const user_role = document.getElementById('user_role').value;
+
             try {
-                const response = await fetch('/auth/signup', {
+                const response = await fetch('/signup', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ username, email, password, confirm_password })
+                    body: JSON.stringify({ username, email, password, confirm_password, user_role })
                 });
 
                 const data = await response.json();

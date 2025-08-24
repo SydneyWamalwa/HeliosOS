@@ -1006,6 +1006,23 @@
                     if (startButton) {
                         startButton.innerHTML = `🌞 ${data.user.username}`;
                     }
+
+                    // Get user role from profile
+                    const userRole = data.user.profile?.user_type || 'casual';
+
+                    // Add user role class to body for styling
+                    document.body.classList.add(`role-${userRole}`);
+
+                    // Update system tray with user info
+                    const systemTray = document.querySelector('.system-tray');
+                    if (systemTray) {
+                        const userInfo = document.createElement('div');
+                        userInfo.className = 'user-info';
+                        userInfo.innerHTML = `<span class="user-role">${userRole}</span>`;
+                        systemTray.prepend(userInfo);
+                    }
+
+                    console.log(`User authenticated: ${data.user.username} (${userRole})`);
                 }
             } catch (error) {
                 console.error('Failed to load user data:', error);

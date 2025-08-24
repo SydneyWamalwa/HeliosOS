@@ -1,27 +1,14 @@
 import os
 import logging
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from flask_cors import CORS
-from flask_login import LoginManager
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-# Initialize extensions - SINGLE INSTANCES ONLY
-db = SQLAlchemy()
-migrate = Migrate()
-login_manager = LoginManager()
-
-# Flask-Limiter (can set Redis/Memcached storage for production)
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["100 per hour", "20 per minute"]
-)
+# Import extensions from extensions module
+from app.extensions import db, migrate, login_manager, limiter
 
 def create_app(config_name=None):
     """Application factory pattern"""
@@ -46,7 +33,7 @@ def create_app(config_name=None):
     # AI Service Configuration
     app.config['HUGGINGFACE_API_KEY'] = os.environ.get('HUGGINGFACE_API_KEY', '')
     app.config['SUMMARY_MODEL'] = os.environ.get('SUMMARY_MODEL', 'facebook/bart-large-cnn')
-    app.config['CHAT_MODEL'] = os.environ.get('CHAT_MODEL', 'microsoft/DialoGPT-medium')
+    app.config['CHAT_MODEL'] = os.environ.get('CHAT_MODEL', 'facebook/blenderbot-400M-distill')
     app.config['OPENAI_API_KEY'] = os.environ.get('OPENAI_API_KEY', '')
 
     # JWT Configuration

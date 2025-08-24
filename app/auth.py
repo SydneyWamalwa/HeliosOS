@@ -6,7 +6,8 @@ import bcrypt
 import jwt
 from flask import current_app, request, jsonify, g, Blueprint, render_template, redirect, url_for
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User, UserSession, db
+from app.extensions import db
+from app.models import User, UserSession
 
 class AuthError(Exception):
     def __init__(self, message, status_code=401):
@@ -166,79 +167,83 @@ def admin_required(f):
             return f(*args, **kwargs)
         except AuthError as e:
             return jsonify({'error': e.message}), e.status_code
+    return decorated
 
+@auth_bp.route('/signup', methods=['GET', 'POST'])
+def signup():
+    """Signup route for new users."""
+    if request.method == 'GET':
+        return render_template('signup.html')
 
-        return decorated
+    # Handle POST requests (actual signup form)
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
 
-    @auth_bp.route('/signup', methods=['GET', 'POST'])
-    def signup():
-        """Signup route for new users."""
-        if request.method == 'GET':
-            return render_template('signup.html')
+        username = data.get('username', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
+        confirm_password = data.get('confirm_password', '')
+        user_role = data.get('user_role', 'casual')
 
-        # Handle POST requests (actual signup form)
-        try:
-            data = request.get_json()
-            if not data:
-                return jsonify({'error': 'No data provided'}), 400
+        # Validation
+        if not username or not password:
+            return jsonify({'error': 'Username and password are required'}), 400
 
-            username = data.get('username', '').strip()
-            email = data.get('email', '').strip()
-            password = data.get('password', '')
-            confirm_password = data.get('confirm_password', '')
+        # Validate user role
+        valid_roles = ['casual', 'business', 'student', 'developer']
+        if user_role not in valid_roles:
+            return jsonify({'error': 'Invalid user role'}), 400
 
-            # Validation
-            if not username or not password:
-                return jsonify({'error': 'Username and password are required'}), 400
+        if password != confirm_password:
+            return jsonify({'error': 'Passwords do not match'}), 400
 
-            if password != confirm_password:
-                return jsonify({'error': 'Passwords do not match'}), 400
+        if len(password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters long'}), 400
 
-            if len(password) < 6:
-                return jsonify({'error': 'Password must be at least 6 characters long'}), 400
+        # Check if user already exists
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            return jsonify({'error': 'Username already taken'}), 400
 
-            # Check if user already exists
-            existing_user = User.query.filter_by(username=username).first()
-            if existing_user:
-                return jsonify({'error': 'Username already taken'}), 400
+        if email:
+            existing_email = User.query.filter_by(email=email).first()
+            if existing_email:
+                return jsonify({'error': 'Email already registered'}), 400
 
-            if email:
-                existing_email = User.query.filter_by(email=email).first()
-                if existing_email:
-                    return jsonify({'error': 'Email already registered'}), 400
-
-            # Create new user
-            new_user = User(
-                username=username,
-                email=email or None,
-                is_active=True,
-                profile={
-                    'user_type': 'casual',
-                    'display_name': username,
-                    'preferences': {
-                        'theme': 'dark',
-                        'notifications': True,
-                        'auto_suggestions': True
-                    }
+        # Create new user
+        new_user = User(
+            username=username,
+            email=email or None,
+            is_active=True,
+            profile={
+                'user_type': user_role,
+                'display_name': username,
+                'preferences': {
+                    'theme': 'dark',
+                    'notifications': True,
+                    'auto_suggestions': True
                 }
-            )
-            new_user.set_password(password)
+            }
+        )
+        new_user.set_password(password)
 
-            db.session.add(new_user)
-            db.session.commit()
+        db.session.add(new_user)
+        db.session.commit()
 
-            # Log in the new user
-            login_user(new_user)
-            new_user.last_login = datetime.utcnow()
-            db.session.commit()
+        # Log in the new user
+        login_user(new_user)
+        new_user.last_login = datetime.utcnow()
+        db.session.commit()
 
-            return jsonify({
-                'success': True,
-                'message': 'Signup successful',
-                'user': new_user.to_dict()
-            })
+        return jsonify({
+            'success': True,
+            'message': 'Signup successful',
+            'user': new_user.to_dict()
+        })
 
-        except Exception as e:
-            current_app.logger.error(f'Signup error: {str(e)}')
-            db.session.rollback()
-            return jsonify({'error': 'Signup failed'}), 500
+    except Exception as e:
+        current_app.logger.error(f'Signup error: {str(e)}')
+        db.session.rollback()
+        return jsonify({'error': 'Signup failed'}), 500

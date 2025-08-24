@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, render_template, current_app, send_from_directory
 from flask_login import login_required, current_user
 from sqlalchemy import text
-from app import db
+from app.extensions import db
 from app.models import CommandAudit, AIInteraction
 from app.ai_client import get_ai_service
 

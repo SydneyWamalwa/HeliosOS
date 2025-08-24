@@ -14,7 +14,7 @@ from pathlib import Path
 # Add the app directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app import create_app, db
+from app import create_app
 from app.models import User
 import logging
 
@@ -29,8 +29,8 @@ logger = logging.getLogger('HeliosOS')
 def setup_database():
     """Initialize the database with default data"""
     try:
-        # Create all tables
-        db.create_all()
+        # Import db from extensions to avoid circular imports
+        from app.extensions import db
 
         # Create default admin user if it doesn't exist
         admin_user = User.query.filter_by(username='admin').first()
@@ -226,7 +226,7 @@ def main():
         # Start the Flask development server
         app.run(
             host='0.0.0.0',
-            port=5002,
+            port=5003,
             debug=True,
             use_reloader=False,  # Disable reloader to prevent service restart
             threaded=True
