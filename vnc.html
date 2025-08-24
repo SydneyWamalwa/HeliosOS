@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeliosOS Desktop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .desktop {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        }
+
+        /* Desktop Icons */
+        .desktop-icons {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 80px);
+            gap: 20px;
+            height: calc(100vh - 60px);
+            align-content: start;
+        }
+
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .desktop-icon:active {
+            transform: translateY(0);
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .icon-image {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .icon-label {
+            font-size: 11px;
+            text-align: center;
+            color: #cbd5e1;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            line-height: 1.2;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Taskbar */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(71, 85, 105, 0.5);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 15px;
+        }
+
+        .start-button {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .start-button:hover {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            transform: translateY(-1px);
+        }
+
+        .taskbar-apps {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .taskbar-app {
+            background: rgba(71, 85, 105, 0.5);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .taskbar-app:hover {
+            background: rgba(71, 85, 105, 0.8);
+        }
+
+        .taskbar-app.active {
+            background: rgba(59, 130, 246, 0.3);
+            color: #f8fafc;
+        }
+
+        .system-tray {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #cbd5e1;
+            font-size: 12px;
+        }
+
+        .system-time {
+            font-weight: 500;
+        }
+
+        /* Application Windows */
+        .app-window {
+            position: fixed;
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            min-width: 400px;
+            min-height: 300px;
+            display: none;
+            z-index: 100;
+        }
+
+        .app-window.active {
+            display: block;
+        }
+
+        .window-header {
+            background: #334155;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #475569;
+            cursor: move;
+        }
+
+        .window-title {
+            font-weight: 600;
+            color: #f8fafc;
+            font-size: 14px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-control {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .window-control.minimize {
+            background: #fbbf24;
+        }
+
+        .window-control.maximize {
+            background: #10b981;
+        }
+
+        .window-control.close {
+            background: #ef4444;
+        }
+
+        .window-control:hover {
+            transform: scale(1.1);
+        }
+
+        .window-content {
+            padding: 20px;
+            height: calc(100% - 60px);
+            overflow: auto;
+        }
+
+        /* Specific App Styles */
+        .firefox-icon { background: linear-gradient(135deg, #ff6611, #ff4500); }
+        .vscode-icon { background: linear-gradient(135deg, #007acc, #005a9e); }
+        .libreoffice-icon { background: linear-gradient(135deg, #18a303, #0e7a02); }
+        .terminal-icon { background: linear-gradient(135deg, #2d3748, #1a202c); }
+        .filemanager-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .calculator-icon { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+
+        /* Loading Animation */
+        .loading-app {
+            opacity: 0.6;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            padding: 8px 0;
+            min-width: 150px;
+            z-index: 200;
+            display: none;
+        }
+
+        .context-menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #cbd5e1;
+            transition: all 0.2s;
+        }
+
+        .context-menu-item:hover {
+            background: #334155;
+            color: #f8fafc;
+        }
+
+        .context-menu-separator {
+            height: 1px;
+            background: #475569;
+            margin: 4px 0;
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 15px 20px;
+            color: #f8fafc;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            z-index: 300;
+            min-width: 300px;
+            animation: slideInFromRight 0.3s ease-out;
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Start menu */
+        .start-menu {
+            position: fixed;
+            bottom: 70px;
+            left: 20px;
+            width: 300px;
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            z-index: 200;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .start-menu.active {
+            display: block;
+            animation: slideUpFromBottom 0.2s ease-out;
+        }
+
+        @keyframes slideUpFromBottom {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .start-menu-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #475569;
+            font-weight: 600;
+        }
+
+        .start-menu-apps {
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .start-menu-app {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .start-menu-app:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="desktop" id="desktop">
+        <div class="desktop-icons">
+            <!-- Applications -->
+            <div class="desktop-icon" data-app="firefox" onclick="openApp('firefox')">
+                <div class="icon-image firefox-icon">🦊</div>
+                <div class="icon-label">Firefox</div>
+            </div>
+
+            <div class="desktop-icon" data-app="vscode" onclick="openApp('vscode')">
+                <div class="icon-image vscode-icon">💻</div>
+                <div class="icon-label">VS Code</div>
+            </div>
+
+            <div class="desktop-icon" data-app="libreoffice" onclick="openApp('libreoffice')">
+                <div class="icon-image libreoffice-icon">📄</div>
+                <div class="icon-label">LibreOffice</div>
+            </div>
+
+            <div class="desktop-icon" data-app="terminal" onclick="openApp('terminal')">
+                <div class="icon-image terminal-icon">⚡</div>
+                <div class="icon-label">Terminal</div>
+            </div>
+
+            <div class="desktop-icon" data-app="filemanager" onclick="openApp('filemanager')">
+                <div class="icon-image filemanager-icon">📁</div>
+                <div class="icon-label">Files</div>
+            </div>
+
+            <div class="desktop-icon" data-app="calculator" onclick="openApp('calculator')">
+                <div class="icon-image calculator-icon">🧮</div>
+                <div class="icon-label">Calculator</div>
+            </div>
+
+            <div class="desktop-icon" data-app="gitea" onclick="openApp('gitea')">
+                <div class="icon-image" style="background: linear-gradient(135deg, #4338ca, #3730a3);">🐙</div>
+                <div class="icon-label">Gitea</div>
+            </div>
+
+            <div class="desktop-icon" data-app="joplin" onclick="openApp('joplin')">
+                <div class="icon-image" style="background: linear-gradient(135deg, #0891b2, #0e7490);">📝</div>
+                <div class="icon-label">Notes</div>
+            </div>
+
+            <div class="desktop-icon" data-app="portainer" onclick="openApp('portainer')">
+                <div class="icon-image" style="background: linear-gradient(135deg, #059669, #047857);">🐳</div>
+                <div class="icon-label">Portainer</div>
+            </div>
+        </div>
+
+        <!-- Sample Application Window -->
+        <div class="app-window" id="firefox-window">
+            <div class="window-header">
+                <div class="window-title">🦊 Firefox Browser</div>
+                <div class="window-controls">
+                    <div class="window-control minimize" onclick="minimizeWindow('firefox-window')"></div>
+                    <div class="window-control maximize" onclick="maximizeWindow('firefox-window')"></div>
+                    <div class="window-control close" onclick="closeWindow('firefox-window')"></div>
+                </div>
+            </div>
+            <div class="window-content">
+                <div style="text-align: center; padding: 50px;">
+                    <h2>🦊 Firefox Browser</h2>
+                    <p>Firefox would be loaded here via Docker container.</p>
+                    <br>
+                    <p>In the full version, this would show the actual Firefox interface.</p>
+                    <br>
+                    <button onclick="window.open('http://localhost:3001', '_blank')" style="background: #ff6611; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                        Open in New Tab
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Context Menu -->
+        <div class="context-menu" id="contextMenu">
+            <div class="context-menu-item" onclick="refreshDesktop()">🔄 Refresh</div>
+            <div class="context-menu-separator"></div>
+            <div class="context-menu-item" onclick="openTerminal()">⚡ Open Terminal</div>
+            <div class="context-menu-item" onclick="openFileManager()">📁 Open File Manager</div>
+            <div class="context-menu-separator"></div>
+            <div class="context-menu-item" onclick="showSystemInfo()">ℹ️ System Information</div>
+        </div>
+
+        <!-- Start Menu -->
+        <div class="start-menu" id="startMenu">
+            <div class="start-menu-header">🌞 HeliosOS Applications</div>
+            <div class="start-menu-apps" id="startMenuApps">
+                <!-- Applications will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+        <button class="start-button" onclick="toggleStartMenu()">
+            🌞 HeliosOS
+        </button>
+
+        <div class="taskbar-apps" id="taskbarApps">
+            <!-- Running apps will appear here -->
+        </div>
+
+        <div class="system-tray">
+            <div class="system-time" id="systemTime"></div>
+            <div>🔊 🔋 📶</div>
+        </div>
+    </div>
+
+    <script>
+        // Application definitions
+        const applications = {
+            firefox: {
+                name: 'Firefox Browser',
+                port: 3001,
+                icon: '🦊',
+                category: 'Internet'
+            },
+            vscode: {
+                name: 'VS Code Editor',
+                port: 8080,
+                icon: '💻',
+                category: 'Development'
+            },
+            libreoffice: {
+                name: 'LibreOffice Suite',
+                port: 9980,
+                icon: '📄',
+                category: 'Office'
+            },
+            terminal: {
+                name: 'Terminal',
+                port: null,
+                icon: '⚡',
+                category: 'System',
+                action: 'embedded'
+            },
+            filemanager: {
+                name: 'File Manager',
+                port: null,
+                icon: '📁',
+                category: 'System',
+                action: 'embedded'
+            },
+            calculator: {
+                name: 'Calculator',
+                port: null,
+                icon: '🧮',
+                category: 'Utilities',
+                action: 'embedded'
+            },
+            gitea: {
+                name: 'Gitea Git Service',
+                port: 3000,
+                icon: '🐙',
+                category: 'Development'
+            },
+            joplin: {
+                name: 'Joplin Notes',
+                port: 22300,
+                icon: '📝',
+                category: 'Productivity'
+            },
+            portainer: {
+                name: 'Portainer Docker Manager',
+                port: 9000,
+                icon: '🐳',
+                category: 'Development'
+            }
+        };
+
+        let runningApps = [];
+        let activeWindow = null;
+        let calcDisplay = '0';
+        let calcOperator = '';
+        let calcPrevious = '';
+        let waitingForOperand = false;
+
+        // Initialize desktop
+        function initDesktop() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            populateStartMenu();
+            setupEventListeners();
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Right-click context menu
+            document.getElementById('desktop').addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                showContextMenu(e.clientX, e.clientY);
+            });
+
+            // Hide context menu on click
+            document.addEventListener('click', () => {
+                hideContextMenu();
+                hideStartMenu();
+            });
+
+            // Prevent context menu from closing when clicked
+            document.getElementById('contextMenu').addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+
+            // Prevent start menu from closing when clicked
+            document.getElementById('startMenu').addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        // Update system time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('systemTime').textContent = timeString;
+        }
+
+        // Populate start menu with applications
+        function populateStartMenu() {
+            const startMenuApps = document.getElementById('startMenuApps');
+            const categories = {};
+
+            // Group apps by category
+            Object.keys(applications).forEach(appId => {
+                const app = applications[appId];
+                if (!categories[app.category]) {
+                    categories[app.category] = [];
+                }
+                categories[app.category].push({id: appId, ...app});
+            });
+
+            // Populate menu
+            Object.keys(categories).forEach(category => {
+                const categoryHeader = document.createElement('div');
+                categoryHeader.style.cssText = 'font-weight: 600; color: #94a3b8; font-size: 11px; margin: 15px 12px 5px; text-transform: uppercase;';
+                categoryHeader.textContent = category;
+                startMenuApps.appendChild(categoryHeader);
+
+                categories[category].forEach(app => {
+                    const appItem = document.createElement('div');
+                    appItem.className = 'start-menu-app';
+                    appItem.onclick = () => {
+                        openApp(app.id);
+                        hideStartMenu();
+                    };
+                    appItem.innerHTML = `
+                        <span style="font-size: 16px;">${app.icon}</span>
+                        <span>${app.name}</span>
+                    `;
+                    startMenuApps.appendChild(appItem);
+                });
+            });
+        }
+
+        // Toggle start menu
+        function toggleStartMenu() {
+            const startMenu = document.getElementById('startMenu');
+            startMenu.classList.toggle('active');
+        }
+
+        // Hide start menu
+        function hideStartMenu() {
+            const startMenu = document.getElementById('startMenu');
+            startMenu.classList.remove('active');
+        }
+
+        // Show context menu
+        function showContextMenu(x, y) {
+            const contextMenu = document.getElementById('contextMenu');
+            contextMenu.style.left = x + 'px';
+            contextMenu.style.top = y + 'px';
+            contextMenu.style.display = 'block';
+        }
+
+        // Hide context menu
+        function hideContextMenu() {
+            const contextMenu = document.getElementById('contextMenu');
+            contextMenu.style.display = 'none';
+        }
+
+        // Open application
+        function openApp(appId) {
+            const app = applications[appId];
+            if (!app) return;
+
+            console.log(`Opening ${app.name}...`);
+
+            // Add loading animation
+            const icon = document.querySelector(`[data-app="${appId}"]`);
+            if (icon) {
+                icon.classList.add('loading-app');
+                setTimeout(() => icon.classList.remove('loading-app'), 2000);
+            }
+
+            // Add to taskbar if not already running
+            if (!runningApps.includes(appId)) {
+                runningApps.push(appId);
+                addToTaskbar(appId, app);
+            }
+
+            // Open the application
+            if (app.port) {
+                // Open in new window/iframe for web apps
+                const url = `http://localhost:${app.port}`;
+                showAppNotification(`Opening ${app.name}...`, `Access it at: ${url}`);
+
+                // Try to open in new tab
+                setTimeout(() => {
+                    window.open(url, '_blank');
+                }, 1000);
+            } else if (app.action === 'embedded') {
+                // Show embedded application
+                showEmbeddedApp(appId, app);
+            }
+
+            // Tell parent window about app launch
+            try {
+                if (window.parent && window.parent.heliosOS) {
+                    window.parent.heliosOS.addChatMessage('assistant',
+                        `✅ Launched ${app.name}! ${app.port ? `Access it at http://localhost:${app.port}` : 'Application is now running.'}`
+                    );
+                }
+            } catch (e) {
+                console.log('Could not communicate with parent window');
+            }
+        }
+
+        // Add app to taskbar
+        function addToTaskbar(appId, app) {
+            const taskbarApps = document.getElementById('taskbarApps');
+            const appButton = document.createElement('div');
+            appButton.className = 'taskbar-app';
+            appButton.id = `taskbar-${appId}`;
+            appButton.innerHTML = `${app.icon} ${app.name}`;
+            appButton.onclick = () => focusApp(appId);
+            taskbarApps.appendChild(appButton);
+        }
+
+        // Focus application
+        function focusApp(appId) {
+            // Remove active class from all taskbar apps
+            document.querySelectorAll('.taskbar-app').forEach(app => {
+                app.classList.remove('active');
+            });
+
+            // Add active class to focused app
+            const taskbarApp = document.getElementById(`taskbar-${appId}`);
+            if (taskbarApp) {
+                taskbarApp.classList.add('active');
+            }
+
+            activeWindow = appId;
+        }
+
+        // Show embedded application
+        function showEmbeddedApp(appId, app) {
+            let windowId = `${appId}-window`;
+            let window = document.getElementById(windowId);
+
+            if (!window) {
+                // Create window if it doesn't exist
+                window = document.createElement('div');
+                window.id = windowId;
+                window.className = 'app-window active';
+                window.style.left = Math.random() * 200 + 100 + 'px';
+                window.style.top = Math.random() * 100 + 50 + 'px';
+                window.style.width = '500px';
+                window.style.height = '400px';
+
+                window.innerHTML = `
+                    <div class="window-header">
+                        <div class="window-title">${app.icon} ${app.name}</div>
+                        <div class="window-controls">
+                            <div class="window-control minimize" onclick="minimizeWindow('${windowId}')"></div>
+                            <div class="window-control maximize" onclick="maximizeWindow('${windowId}')"></div>
+                            <div class="window-control close" onclick="closeWindow('${windowId}')"></div>
+                        </div>
+                    </div>
+                    <div class="window-content">
+                        ${getAppContent(appId)}
+                    </div>
+                `;
+
+                document.body.appendChild(window);
+                makeWindowDraggable(window);
+            } else {
+                window.classList.add('active');
+            }
+
+            focusApp(appId);
+        }
+
+        // Get content for embedded apps
+        function getAppContent(appId) {
+            const contents = {
+                terminal: `
+                    <div style="background: #000; color: #0f0; padding: 20px; font-family: monospace; height: 100%;">
+                        <div>HeliosOS Terminal v1.0</div>
+                        <div>Type 'help' for available commands</div>
+                        <br>
+                        <div>user@helios:~$ <span id="terminal-cursor">|</span></div>
+                    </div>
+                `,
+                filemanager: `
+                    <div style="padding: 20px; height: 100%;">
+                        <h3>📁 File Manager</h3>
+                        <div style="margin-top: 20px;">
+                            <div style="padding: 10px; border: 1px solid #475569; margin: 5px 0; border-radius: 4px; cursor: pointer;" onclick="alert('Opening Documents...')">📁 Documents</div>
+                            <div style="padding: 10px; border: 1px solid #475569; margin: 5px 0; border-radius: 4px; cursor: pointer;" onclick="alert('Opening Downloads...')">📁 Downloads</div>
+                            <div style="padding: 10px; border: 1px solid #475569; margin: 5px 0; border-radius: 4px; cursor: pointer;" onclick="alert('Opening Pictures...')">📁 Pictures</div>
+                            <div style="padding: 10px; border: 1px solid #475569; margin: 5px 0; border-radius: 4px; cursor: pointer;" onclick="alert('Opening Music...')">📁 Music</div>
+                        </div>
+                    </div>
+                `,
+                calculator: `
+                    <div style="padding: 20px; text-align: center; height: 100%;">
+                        <h3>🧮 Calculator</h3>
+                        <div id="calc-display" style="background: #000; color: #0f0; padding: 20px; margin: 20px 0; border-radius: 4px; font-size: 24px; font-family: monospace; text-align: right;">
+                            0
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 200px; margin: 0 auto;">
+                            <button onclick="calcBtn('C')" style="padding: 15px; border: none; background: #ef4444; color: white; border-radius: 4px; cursor: pointer;">C</button>
+                            <button onclick="calcBtn('/')" style="padding: 15px; border: none; background: #6366f1; color: white; border-radius: 4px; cursor: pointer;">÷</button>
+                            <button onclick="calcBtn('*')" style="padding: 15px; border: none; background: #6366f1; color: white; border-radius: 4px; cursor: pointer;">×</button>
+                            <button onclick="calcBtn('-')" style="padding: 15px; border: none; background: #6366f1; color: white; border-radius: 4px; cursor: pointer;">-</button>
+                            <button onclick="calcBtn('7')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer;">7</button>
+                            <button onclick="calcBtn('8')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer;">8</button>
+                            <button onclick="calcBtn('9')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer;">9</button>
+                            <button onclick="calcBtn('+')" style="padding: 15px; border: none; background: #6366f1; color: white; border-radius: 4px; cursor: pointer;">+</button>
+                            <button onclick="calcBtn('4')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer;">4</button>
+                            <button onclick="calcBtn('5')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer;">5</button>
+                            <button onclick="calcBtn('6')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer;">6</button>
+                            <button onclick="calcBtn('=')" style="padding: 15px; border: none; background: #10b981; color: white; border-radius: 4px; cursor: pointer;" rowspan="2">=</button>
+                            <button onclick="calcBtn('1')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer;">1</button>
+                            <button onclick="calcBtn('2')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer;">2</button>
+                            <button onclick="calcBtn('3')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer;">3</button>
+                            <button onclick="calcBtn('0')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer; grid-column: span 2;">0</button>
+                            <button onclick="calcBtn('.')" style="padding: 15px; border: none; background: #374151; color: white; border-radius: 4px; cursor: pointer;">.</button>
+                        </div>
+                    </div>
+                `
+            };
+
+            return contents[appId] || '<div style="padding: 20px; text-align: center;">Application content not available</div>';
+        }
+
+        // Calculator button handler
+        function calcBtn(value) {
+            const display = document.getElementById('calc-display');
+            if (!display) return;
+
+            if (value === 'C') {
+                calcDisplay = '0';
+                calcOperator = '';
+                calcPrevious = '';
+                waitingForOperand = false;
+            } else if (['+', '-', '*', '/'].includes(value)) {
+                if (calcPrevious && calcOperator && !waitingForOperand) {
+                    const result = calculate();
+                    calcDisplay = result.toString();
+                    calcPrevious = result.toString();
+                } else {
+                    calcPrevious = calcDisplay;
+                }
+                calcOperator = value;
+                waitingForOperand = true;
+            } else if (value === '=') {
+                if (calcPrevious && calcOperator) {
+                    const result = calculate();
+                    calcDisplay = result.toString();
+                    calcOperator = '';
+                    calcPrevious = '';
+                    waitingForOperand = true;
+                }
+            } else {
+                if (waitingForOperand) {
+                    calcDisplay = value;
+                    waitingForOperand = false;
+                } else {
+                    calcDisplay = calcDisplay === '0' ? value : calcDisplay + value;
+                }
+            }
+
+            display.textContent = calcDisplay;
+        }
+
+        // Calculate result
+        function calculate() {
+            const prev = parseFloat(calcPrevious);
+            const current = parseFloat(calcDisplay);
+
+            switch (calcOperator) {
+                case '+': return prev + current;
+                case '-': return prev - current;
+                case '*': return prev * current;
+                case '/': return current !== 0 ? prev / current : 0;
+                default: return current;
+            }
+        }
+
+        // Make window draggable
+        function makeWindowDraggable(windowElement) {
+            const header = windowElement.querySelector('.window-header');
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+
+            header.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', dragEnd);
+
+            function dragStart(e) {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+
+                if (e.target === header || header.contains(e.target)) {
+                    isDragging = true;
+                }
+            }
+
+            function dragMove(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+
+                    xOffset = currentX;
+                    yOffset = currentY;
+
+                    windowElement.style.transform = `translate(${currentX}px, ${currentY}px)`;
+                }
+            }
+
+            function dragEnd() {
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+            }
+        }
+
+        // Window control functions
+        function minimizeWindow(windowId) {
+            const window = document.getElementById(windowId);
+            if (window) {
+                window.classList.remove('active');
+            }
+        }
+
+        function maximizeWindow(windowId) {
+            const window = document.getElementById(windowId);
+            if (window) {
+                if (window.style.width === '100vw') {
+                    // Restore
+                    window.style.width = '500px';
+                    window.style.height = '400px';
+                    window.style.left = '100px';
+                    window.style.top = '50px';
+                } else {
+                    // Maximize
+                    window.style.width = '100vw';
+                    window.style.height = 'calc(100vh - 60px)';
+                    window.style.left = '0';
+                    window.style.top = '0';
+                }
+            }
+        }
+
+        function closeWindow(windowId) {
+            const window = document.getElementById(windowId);
+            if (window) {
+                window.remove();
+
+                // Remove from taskbar
+                const appId = windowId.replace('-window', '');
+                const taskbarApp = document.getElementById(`taskbar-${appId}`);
+                if (taskbarApp) {
+                    taskbarApp.remove();
+                }
+
+                // Remove from running apps
+                const index = runningApps.indexOf(appId);
+                if (index > -1) {
+                    runningApps.splice(index, 1);
+                }
+            }
+        }
+
+        // Show notification
+        function showAppNotification(title, message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 5px;">${title}</div>
+                <div style="font-size: 12px; opacity: 0.8;">${message}</div>
+                <button onclick="this.parentElement.remove()" style="position: absolute; top: 5px; right: 10px; background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;">×</button>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Context menu actions
+        function refreshDesktop() {
+            location.reload();
+        }
+
+        function openTerminal() {
+            openApp('terminal');
+        }
+
+        function openFileManager() {
+            openApp('filemanager');
+        }
+
+        function showSystemInfo() {
+            showAppNotification('System Information', 'HeliosOS Desktop Environment v1.0');
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initDesktop);
+
+        // Check authentication and fetch user data
+        async function checkAuthAndLoadUser() {
+            try {
+                const response = await fetch('/api/user/profile');
+                if (!response.ok) {
+                    // Redirect to login if not authenticated
+                    window.location.href = '/auth/login';
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success && data.user) {
+                    // Update start button with username
+                    const startButton = document.querySelector('.start-button');
+                    if (startButton) {
+                        startButton.innerHTML = `🌞 ${data.user.username}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load user data:', error);
+                // Redirect to login on error
+                window.location.href = '/auth/login';
+            }
+        }
+
+        // Load user data when page loads
+        checkAuthAndLoadUser();
+    </script>
+</body>
+</html>

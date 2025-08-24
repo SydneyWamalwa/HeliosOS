@@ -1,0 +1,14 @@
+version: "3.8"
+services:
+  aurora:
+    build: .
+    ports:
+      - "8080:8080"   # noVNC web UI
+      - "8000:8000"   # FastAPI assistant
+    environment:
+      NOVNC_PORT: 8080
+      VNC_PASS: "aurora123"
+      # Read HF key from env; do NOT commit your key into the repo.
+      HUGGINGFACE_API_KEY: "${HUGGINGFACE_API_KEY:-}"
+    volumes:
+      - ./:/opt/app:delegated

@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeliosOS - AI-Powered Cloud Desktop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: #475569;
+            --border-light: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1e293b 100%);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+            gap: 1px;
+            background: var(--border);
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .logo i {
+            color: var(--warning);
+            font-size: 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Desktop Viewer */
+        .desktop-container {
+            background: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .desktop-header {
+            background: var(--bg-card);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .desktop-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .desktop-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+
+        .control-btn:hover {
+            background: var(--bg-primary);
+            border-color: var(--border-light);
+        }
+
+        .desktop-viewer {
+            flex: 1;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            color: var(--text-primary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* AI Assistant Panel */
+        .assistant-panel {
+            background: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border);
+        }
+
+        .assistant-header {
+            background: var(--bg-card);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .assistant-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .assistant-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .assistant-tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            background: var(--bg-card);
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            background: var(--bg-card);
+        }
+
+        .tab-content {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Chat Tab */
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--primary);
+        }
+
+        .message.assistant .message-avatar {
+            background: var(--secondary);
+        }
+
+        .message-content {
+            background: var(--bg-card);
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .message.user .message-content {
+            background: var(--primary);
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-field {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-primary);
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-primary);
+        }
+
+        /* Command Tab */
+        .command-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .command-input {
+            padding: 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .quick-commands {
+            margin-bottom: 15px;
+        }
+
+        .quick-commands label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .quick-select {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+        }
+
+        .command-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .command-field {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            color: var(--text-primary);
+            font-family: 'Courier New', monospace;
+        }
+
+        .command-output {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--bg-primary);
+        }
+
+        .command-result {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .command-header {
+            background: var(--bg-card);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .command-text {
+            font-family: 'Courier New', monospace;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .command-time {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .command-body {
+            padding: 16px;
+        }
+
+        .command-output-text {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            color: var(--text-primary);
+        }
+
+        .command-footer {
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .exit-code {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .exit-code.success {
+            background: var(--success);
+            color: white;
+        }
+
+        .exit-code.error {
+            background: var(--error);
+            color: white;
+        }
+
+        /* System Tab */
+        .system-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .system-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .system-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .system-card-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .system-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .system-unit {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr 400px;
+            }
+
+            .assistant-panel {
+                border-left: none;
+                border-top: 1px solid var(--border);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0 15px;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+
+            .system-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-layout">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-sun"></i>
+                <span>HeliosOS</span>
+            </div>
+            <div class="header-actions">
+                <div class="user-info">
+                    <span id="user-name">Demo User</span>
+                    <div class="status-indicator" id="status-indicator"></div>
+                </div>
+                <button class="control-btn" onclick="heliosOS.showSettings()">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="control-btn" onclick="heliosOS.logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Desktop Container -->
+        <div class="desktop-container">
+            <div class="desktop-header">
+                <div class="desktop-title">
+                    <i class="fas fa-desktop"></i>
+                    <span>Cloud Desktop</span>
+                </div>
+                <div class="desktop-controls">
+                    <button class="control-btn" onclick="heliosOS.refreshDesktop()">
+                        <i class="fas fa-refresh"></i> Refresh
+                    </button>
+                    <button class="control-btn" onclick="heliosOS.toggleFullscreen()">
+                        <i class="fas fa-expand"></i> Fullscreen
+                    </button>
+                </div>
+            </div>
+            <div class="desktop-viewer">
+                <iframe id="desktop-frame" src="/vnc.html" title="HeliosOS Desktop"></iframe>
+                <div class="loading-overlay" id="desktop-loading">
+                    <div class="loading-spinner"></div>
+                    <div>Connecting to your cloud desktop...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Assistant Panel -->
+        <aside class="assistant-panel">
+            <div class="assistant-header">
+                <div class="assistant-title">
+                    <i class="fas fa-robot"></i>
+                    Leo - Your AI Assistant
+                </div>
+                <div class="assistant-subtitle">
+                    Helping you navigate HeliosOS efficiently
+                </div>
+            </div>
+
+            <div class="assistant-tabs">
+                <div class="tab active" data-tab="chat">
+                    <i class="fas fa-comments"></i> Chat
+                </div>
+                <div class="tab" data-tab="command">
+                    <i class="fas fa-terminal"></i> Commands
+                </div>
+                <div class="tab" data-tab="system">
+                    <i class="fas fa-chart-line"></i> System
+                </div>
+            </div>
+
+            <!-- Chat Tab -->
+            <div class="tab-content active" id="chat-tab">
+                <div class="chat-container" id="chat-container">
+                    <div class="message assistant">
+                        <div class="message-avatar">🤖</div>
+                        <div>
+                            <div class="message-content">
+                                Hello! I'm Leo, your AI assistant for HeliosOS. I can help you:
+                                <br>• Navigate and use applications
+                                <br>• Summarize documents and text
+                                <br>• Execute safe system commands
+                                <br>• Troubleshoot issues
+                                <br><br>How can I assist you today?
+                            </div>
+                            <div class="message-time">Just now</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <div class="input-group">
+                        <textarea
+                            id="chat-input"
+                            class="input-field"
+                            placeholder="Ask Leo anything about HeliosOS, request text summarization, or get help with tasks..."
+                            rows="3"
+                        ></textarea>
+                        <div class="input-actions">
+                            <button class="btn btn-primary" id="send-btn">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                            <button class="btn btn-secondary" id="summarize-btn">
+                                <i class="fas fa-file-text"></i> Summarize
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Command Tab -->
+            <div class="tab-content" id="command-tab">
+                <div class="command-container">
+                    <div class="command-input">
+                        <div class="quick-commands">
+                            <label>Quick Commands:</label>
+                            <select class="quick-select" id="quick-select">
+                                <option value="">Select a command...</option>
+                                <option value="whoami">whoami - Current user</option>
+                                <option value="pwd">pwd - Current directory</option>
+                                <option value="ls -la">ls -la - List files (detailed)</option>
+                                <option value="df -h">df -h - Disk usage</option>
+                                <option value="free -h">free -h - Memory usage</option>
+                                <option value="uptime">uptime - System uptime</option>
+                                <option value="ps aux">ps aux - Running processes</option>
+                                <option value="date">date - Current date/time</option>
+                            </select>
+                        </div>
+                        <div class="command-input-group">
+                            <input
+                                type="text"
+                                id="cmd-input"
+                                class="command-field"
+                                placeholder="Enter command (only safe commands allowed)"
+                            >
+                            <button class="btn btn-primary" id="run-btn">
+                                <i class="fas fa-play"></i> Run
+                            </button>
+                        </div>
+                    </div>
+                    <div class="command-output" id="cmd-output">
+                        <div style="text-align: center; color: var(--text-muted); padding: 40px;">
+                            No commands executed yet. Try running 'whoami' or 'ls -la'
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Tab -->
+            <div class="tab-content" id="system-tab">
+                <div class="system-container">
+                    <div class="system-grid">
+                        <div class="system-card">
+                            <div class="system-card-title">
+                                <i class="fas fa-microchip"></i>
+                                CPU Usage
+                            </div>
+                            <div class="system-value" id="cpu-usage">45<span class="system-unit">%</span></div>
+                        </div>
+                        <div class="system-card">
+                            <div class="system-card-title">
+                                <i class="fas fa-memory"></i>
+                                Memory
+                            </div>
+                            <div class="system-value" id="memory-usage">67<span class="system-unit">%</span></div>
+                        </div>
+                        <div class="system-card">
+                            <div class="system-card-title">
+                                <i class="fas fa-hdd"></i>
+                                Disk Usage
+                            </div>
+                            <div class="system-value" id="disk-usage">23<span class="system-unit">%</span></div>
+                        </div>
+                        <div class="system-card">
+                            <div class="system-card-title">
+                                <i class="fas fa-wifi"></i>
+                                Network
+                            </div>
+                            <div class="system-value" id="network-status">Connected</div>
+                        </div>
+                    </div>
+
+                    <div class="system-card">
+                        <div class="system-card-title">
+                            <i class="fas fa-info-circle"></i>
+                            System Information
+                        </div>
+                        <div style="font-size: 14px; line-height: 1.6; color: var(--text-secondary);">
+                            <strong>OS:</strong> HeliosOS (Ubuntu-based)<br>
+                            <strong>Kernel:</strong> 5.15.0-helios<br>
+                            <strong>Uptime:</strong> <span id="system-uptime">2 days, 5 hours</span><br>
+                            <strong>AI Models:</strong> BART, DialoGPT<br>
+                            <strong>Session:</strong> <span id="session-time">1 hour, 23 minutes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script>
+        // Enhanced HeliosOS JavaScript integration
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab functionality
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.dataset.tab;
+
+                    // Remove active class from all tabs and content
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    document.getElementById(tabName + '-tab').classList.add('active');
+                });
+            });
+
+            // Desktop loading simulation
+            const desktopFrame = document.getElementById('desktop-frame');
+            const loadingOverlay = document.getElementById('desktop-loading');
+
+            desktopFrame.addEventListener('load', function() {
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                }, 2000);
+            });
+
+            // Initialize HeliosOS if available
+            if (window.heliosOS) {
+                // Update system stats periodically
+                setInterval(updateSystemStats, 5000);
+            }
+        });
+
+        function updateSystemStats() {
+            // Simulate system stats updates
+            const cpuUsage = Math.floor(Math.random() * 20) + 30; // 30-50%
+            const memoryUsage = Math.floor(Math.random() * 15) + 60; // 60-75%
+            const diskUsage = Math.floor(Math.random() * 10) + 20; // 20-30%
+
+            document.getElementById('cpu-usage').innerHTML = `${cpuUsage}<span class="system-unit">%</span>`;
+            document.getElementById('memory-usage').innerHTML = `${memoryUsage}<span class="system-unit">%</span>`;
+            document.getElementById('disk-usage').innerHTML = `${diskUsage}<span class="system-unit">%</span>`;
+        }
+
+        // Enhanced HeliosOS methods
+        if (typeof HeliosOS !== 'undefined') {
+            HeliosOS.prototype.refreshDesktop = function() {
+                const loadingOverlay = document.getElementById('desktop-loading');
+                const desktopFrame = document.getElementById('desktop-frame');
+
+                loadingOverlay.style.display = 'flex';
+                desktopFrame.src = desktopFrame.src; // Reload iframe
+
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                }, 3000);
+            };
+
+            HeliosOS.prototype.toggleFullscreen = function() {
+                const desktopContainer = document.querySelector('.desktop-container');
+
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    desktopContainer.requestFullscreen();
+                }
+            };
+
+            HeliosOS.prototype.showSettings = function() {
+                this.showNotification('Settings panel coming soon!', 'info');
+            };
+        }
+    </script>
+</body>
+</html>

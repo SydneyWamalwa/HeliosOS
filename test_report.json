@@ -1,0 +1,57 @@
+{
+  "test_summary": {
+    "total_suites": 8,
+    "passed": 8,
+    "failed": 0,
+    "success_rate": "100.0%",
+    "duration": "1.84 seconds",
+    "timestamp": "2025-08-19T07:51:18.079766"
+  },
+  "test_results": [
+    {
+      "suite": "Core Components",
+      "status": "PASSED",
+      "timestamp": "2025-08-19T07:51:17.257744"
+    },
+    {
+      "suite": "AI Command Processor",
+      "status": "PASSED",
+      "timestamp": "2025-08-19T07:51:17.261145"
+    },
+    {
+      "suite": "Application Manager",
+      "status": "PASSED",
+      "timestamp": "2025-08-19T07:51:17.262258"
+    },
+    {
+      "suite": "Workflow Engine",
+      "status": "PASSED",
+      "timestamp": "2025-08-19T07:51:17.263138"
+    },
+    {
+      "suite": "Enhanced AI Client",
+      "status": "PASSED",
+      "timestamp": "2025-08-19T07:51:17.620979"
+    },
+    {
+      "suite": "Database Models",
+      "status": "PASSED",
+      "timestamp": "2025-08-19T07:51:18.079269"
+    },
+    {
+      "suite": "API Routes",
+      "status": "PASSED",
+      "timestamp": "2025-08-19T07:51:18.079477"
+    },
+    {
+      "suite": "Configuration",
+      "status": "PASSED",
+      "timestamp": "2025-08-19T07:51:18.079731"
+    }
+  ],
+  "system_info": {
+    "python_version": "3.11.0rc1 (main, Aug 12 2022, 10:02:14) [GCC 11.2.0]",
+    "platform": "linux",
+    "helios_version": "2.0.0-enhanced"
+  }
+}

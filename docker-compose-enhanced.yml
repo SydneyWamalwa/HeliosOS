@@ -1,0 +1,344 @@
+version: '3.8'
+
+services:
+  # HeliosOS Main Application
+  helios-app:
+    build: .
+    container_name: helios-main
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://postgres:helios123@postgres:5432/helios
+      - SECRET_KEY=helios-secret-key-change-in-production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}
+    volumes:
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: helios-postgres
+    environment:
+      - POSTGRES_DB=helios
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=helios123
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh:ro
+    ports:
+      - "5434:5432"  # Changed to 5434 to avoid any conflicts
+    networks:
+      - helios-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Redis for caching and message queuing
+  redis:
+    image: redis:7-alpine
+    container_name: helios-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - helios-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # LibreOffice Online
+  libreoffice:
+    image: libreoffice/online:latest
+    container_name: helios-libreoffice
+    ports:
+      - "9980:9980"
+    environment:
+      - domain=localhost:9980
+      - username=admin
+      - password=helios123
+      - DONT_GEN_SSL_CERT=true
+    volumes:
+      - libreoffice_data:/opt/lool/systemplate
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # VS Code Server
+  vscode:
+    image: codercom/code-server:latest
+    container_name: helios-vscode
+    ports:
+      - "8080:8080"
+    environment:
+      - PASSWORD=helios123
+      - SUDO_PASSWORD=helios123
+    volumes:
+      - vscode_data:/home/coder
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # Firefox Browser
+  firefox:
+    image: linuxserver/firefox:latest
+    container_name: helios-firefox
+    ports:
+      - "3001:3000"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - firefox_data:/config
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # Gitea Git Service
+  gitea:
+    image: gitea/gitea:latest
+    container_name: helios-gitea
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=postgres:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=postgres
+      - GITEA__database__PASSWD=helios123
+    volumes:
+      - gitea_data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # Portainer Container Management
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: helios-portainer
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # Joplin Server for Notes
+  joplin:
+    image: joplin/server:latest
+    container_name: helios-joplin
+    ports:
+      - "22300:22300"
+    environment:
+      - APP_PORT=22300
+      - APP_BASE_URL=http://localhost:22300
+      - DB_CLIENT=pg
+      - POSTGRES_PASSWORD=helios123
+      - POSTGRES_DATABASE=joplin
+      - POSTGRES_USER=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - joplin_data:/var/lib/joplin
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # Rocket.Chat Team Communication
+  rocketchat:
+    image: rocket.chat:latest
+    container_name: helios-rocketchat
+    ports:
+      - "3002:3000"
+    environment:
+      - ROOT_URL=http://localhost:3002
+      - MONGO_URL=mongodb://mongo:27017/rocketchat
+      - MONGO_OPLOG_URL=mongodb://mongo:27017/local
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - rocketchat_uploads:/app/uploads
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # MongoDB for Rocket.Chat
+  mongo:
+    image: mongo:6
+    container_name: helios-mongo
+    volumes:
+      - mongo_data:/data/db
+    command: mongod --oplogSize 128 --replSet rs0
+    networks:
+      - helios-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # MongoDB Replica Set Initialization
+  mongo-init-replica:
+    image: mongo:6
+    container_name: helios-mongo-init
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: >
+      bash -c "
+        sleep 10;
+        mongosh --host mongo:27017 --eval '
+          try {
+            rs.status()
+          } catch(e) {
+            rs.initiate({
+              _id: \"rs0\",
+              members: [{ _id: 0, host: \"mongo:27017\" }]
+            })
+          }
+        '
+      "
+    networks:
+      - helios-network
+    restart: "no"
+
+  # Zotero Research Assistant
+  zotero:
+    image: linuxserver/zotero:latest
+    container_name: helios-zotero
+    ports:
+      - "3003:3000"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - zotero_data:/config
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # Odoo ERP System
+  odoo:
+    image: odoo:16
+    container_name: helios-odoo
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=postgres
+      - USER=postgres
+      - PASSWORD=helios123
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - odoo_data:/var/lib/odoo
+      - odoo_addons:/mnt/extra-addons
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: helios-nginx
+    ports:
+      - "8888:80"
+      - "8443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - helios-app
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+  # Aurora Service (using simple Python setup)
+  aurora:
+    image: python:3.11-slim
+    container_name: helios-aurora
+    ports:
+      - "8081:8080"
+      - "8001:8000"
+    environment:
+      - NOVNC_PORT=8080
+      - VNC_PASS=aurora123
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY:-}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./app.py:/opt/app/app.py:ro
+      - ./requirements.txt:/opt/app/requirements.txt:ro
+      - ./templates:/opt/app/templates:ro
+      - ./static:/opt/app/static:ro
+      - aurora_data:/opt/data
+    working_dir: /opt/app
+    command: >
+      bash -c "
+        apt-get update &&
+        apt-get install -y gcc postgresql-client curl &&
+        pip install --no-cache-dir -r requirements.txt &&
+        python app.py
+      "
+    networks:
+      - helios-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  libreoffice_data:
+  vscode_data:
+  firefox_data:
+  gitea_data:
+  portainer_data:
+  joplin_data:
+  rocketchat_uploads:
+  mongo_data:
+  zotero_data:
+  odoo_data:
+  odoo_addons:
+  nginx_logs:
+  aurora_data:
+
+networks:
+  helios-network:
+    driver: bridge

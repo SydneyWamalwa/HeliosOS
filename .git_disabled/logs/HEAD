@@ -1,0 +1,5 @@
+0000000000000000000000000000000000000000 e5f6e1e0cb4f8b3cd767b359d249fe4f87a748da SydneyWamalwa <sydneywamalwa@gmail.com> 1755085852 +0300	clone: from https://github.com/SydneyWamalwa/HeliosOS.git
+e5f6e1e0cb4f8b3cd767b359d249fe4f87a748da 0d6353a0d770b1cdd270147c8cad7daad13a57d0 SydneyWamalwa <sydneywamalwa@gmail.com> 1755086135 +0300	commit: index.html improved
+0d6353a0d770b1cdd270147c8cad7daad13a57d0 ba16499cc49a65b0412a2c76eae6dd54e520fcf2 SydneyWamalwa <sydneywamalwa@gmail.com> 1755090696 +0300	commit: main.js redone
+ba16499cc49a65b0412a2c76eae6dd54e520fcf2 efdfb4f97afc4ec0e5249c789f3f48cfdd640904 SydneyWamalwa <sydneywamalwa@gmail.com> 1755605044 +0300	pull: Fast-forward
+efdfb4f97afc4ec0e5249c789f3f48cfdd640904 d6188b63d5857a5d97b66a6dc5dd333aa735598b SydneyWamalwa <sydneywamalwa@gmail.com> 1755979056 +0300	commit: changed docker file
