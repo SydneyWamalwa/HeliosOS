@@ -73,11 +73,24 @@ def create_app(config_name=None):
     from app.auth import auth_bp
     from app.enhanced_routes import enhanced_bp
     from app.enhanced_routes_v2 import enhanced_v2_bp
+    from app.routes_health import health_bp
+    
+    # Try to import full AI routes, fallback to basic ones if dependencies missing
+    try:
+        from app.enhanced_ai_routes import register_enhanced_ai_routes
+        register_enhanced_ai_routes(app)
+        app.logger.info("Full AI routes registered")
+    except ImportError as e:
+        app.logger.warning(f"Full AI routes not available ({str(e)}), using fallback")
+        from app.enhanced_ai_routes_fallback import register_fallback_ai_routes
+        register_fallback_ai_routes(app)
+        app.logger.info("Fallback AI routes registered")
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(enhanced_bp)
     app.register_blueprint(enhanced_v2_bp)
+    app.register_blueprint(health_bp)
 
     # Register CLI commands
     from app.cli import register_commands
@@ -135,6 +148,31 @@ def initialize_background_services(app):
         # Initialize enhanced AI client
         from app.enhanced_ai_client import enhanced_ai_client
         app.logger.info('Enhanced AI client initialized')
+
+        # Try to initialize full AI modules, fallback to basic ones if dependencies missing
+        try:
+            from app.ai_action_automation import get_automation_system
+            from app.ai_content_processor import get_content_processor
+            from app.ai_innovative_features import get_innovative_features
+            
+            automation_system = get_automation_system()
+            content_processor = get_content_processor()
+            innovative_features = get_innovative_features()
+            
+            app.logger.info('Full AI modules initialized')
+        except ImportError as e:
+            app.logger.warning(f'Full AI modules not available ({str(e)}), using fallback')
+            from app.ai_fallback_modules import (
+                get_automation_system, 
+                get_content_processor, 
+                get_innovative_features
+            )
+            
+            automation_system = get_automation_system()
+            content_processor = get_content_processor()
+            innovative_features = get_innovative_features()
+            
+            app.logger.info('Fallback AI modules initialized')
 
     except Exception as e:
         app.logger.error(f'Failed to initialize background services: {e}')

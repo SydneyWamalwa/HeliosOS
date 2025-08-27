@@ -223,14 +223,25 @@ def main():
     print_access_info()
 
     try:
-        # Start the Flask development server
-        app.run(
-            host='0.0.0.0',
-            port=5003,
-            debug=True,
-            use_reloader=False,  # Disable reloader to prevent service restart
-            threaded=True
-        )
+        # Get port from environment (for production deployment) or use default
+        port = int(os.environ.get('PORT', 5003))
+        
+        # Check if running in production
+        is_production = os.environ.get('FLASK_ENV') == 'production'
+        
+        if is_production:
+            # In production, use gunicorn (this won't be reached, but good for reference)
+            print(f"🚀 Production mode detected. Use gunicorn to start on port {port}")
+            print(f"   Command: gunicorn --bind 0.0.0.0:{port} run:app")
+        else:
+            # Start the Flask development server
+            app.run(
+                host='0.0.0.0',
+                port=port,
+                debug=True,
+                use_reloader=False,  # Disable reloader to prevent service restart
+                threaded=True
+            )
     except KeyboardInterrupt:
         print("\n\n🛑 HeliosOS shutdown initiated...")
         logger.info("HeliosOS shutdown completed")
