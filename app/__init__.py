@@ -73,6 +73,7 @@ def create_app(config_name=None):
     from app.auth import auth_bp
     from app.enhanced_routes import enhanced_bp
     from app.enhanced_routes_v2 import enhanced_v2_bp
+    from app.enhanced_routes_v3 import enhanced_v3_bp
     from app.routes_health import health_bp
     
     # Try to import full AI routes, fallback to basic ones if dependencies missing
@@ -90,6 +91,7 @@ def create_app(config_name=None):
     app.register_blueprint(auth_bp)
     app.register_blueprint(enhanced_bp)
     app.register_blueprint(enhanced_v2_bp)
+    app.register_blueprint(enhanced_v3_bp)
     app.register_blueprint(health_bp)
 
     # Register CLI commands
@@ -148,6 +150,34 @@ def initialize_background_services(app):
         # Initialize enhanced AI client
         from app.enhanced_ai_client import enhanced_ai_client
         app.logger.info('Enhanced AI client initialized')
+
+        # Initialize enhanced Leo and AI agent
+        try:
+            from app.leo_enhanced import enhanced_leo
+            from app.enhanced_ai_agent import enhanced_ai_agent
+            from app.plugin_system import plugin_manager
+            
+            # Initialize in background (async components)
+            import asyncio
+            import threading
+            
+            def init_enhanced_components():
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    loop.run_until_complete(enhanced_leo.initialize())
+                    app.logger.info('Enhanced Leo initialized')
+                except Exception as e:
+                    app.logger.error(f'Failed to initialize enhanced Leo: {e}')
+                finally:
+                    loop.close()
+            
+            # Start initialization in background thread
+            init_thread = threading.Thread(target=init_enhanced_components, daemon=True)
+            init_thread.start()
+            
+        except ImportError as e:
+            app.logger.warning(f'Enhanced AI components not available: {e}')
 
         # Try to initialize full AI modules, fallback to basic ones if dependencies missing
         try:
